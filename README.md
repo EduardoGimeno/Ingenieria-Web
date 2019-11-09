@@ -15,7 +15,7 @@ Hay dos opciones disponibles para comprobar si una URL es segura con Google Safe
  * [Formato](https://developers.google.com/safe-browsing/v4/lookup-api) de petición y respuesta de comprobación de seguridad.
  * [Formato](https://developers.google.com/safe-browsing/v4/lists) de petición y respuesta de lista amenazas.
  * Obtener [api_key](https://console.cloud.google.com/apis/credentials)
- * Activar el [API de Google Safe Browsing] (https://console.cloud.google.com/apis/api/safebrowsing.googleapis.com/)
+ * Activar el [API de Google Safe Browsing](https://console.cloud.google.com/apis/api/safebrowsing.googleapis.com/)
 
 ### TODOLIST:
  * Estudiar diferencias entre [Lookup API](https://developers.google.com/safe-browsing/v4/lookup-api) y [Update API](https://developers.google.com/safe-browsing/v4/update-api), ¿cuál deberíamos utilizar?
