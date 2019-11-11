@@ -23,6 +23,7 @@ dependencies {
     implementation 'com.google.guava:guava:28.1-jre'
     
     compile 'com.google.apis:google-api-services-safebrowsing:v4-rev123-1.25.0'
+    compile group: 'com.opencsv', name: 'opencsv', version: '4.1'
 
     runtime 'org.webjars:bootstrap:3.3.5'
     runtime 'org.webjars:jquery:2.1.4'

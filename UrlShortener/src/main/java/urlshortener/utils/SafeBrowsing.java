@@ -6,8 +6,12 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.safebrowsing.Safebrowsing;
 import com.google.api.services.safebrowsing.model.*;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +21,7 @@ public class SafeBrowsing {
     // Api Key obtenible desde: https://console.cloud.google.com/apis/credentials
     // Se debe activar el API de Google Safe Browsing: https://console.cloud.google.com/apis/api/safebrowsing.googleapis.com/
     // TODO: ¿Usar key comun cifrada como en practica 2?
-    private static final String api_key = "";
+    private static final String api_key = "AIzaSyDhWGqSKhAFV2-q0Jmm9EL65s2qQE3EkrQ";
     private static final String base_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=xxx";
     private static final String threats_URL = "https://safebrowsing.googleapis.com/v4/threatLists?key=xxx";
     private static final String client_Name = "iwebtp6";
@@ -69,46 +73,44 @@ public class SafeBrowsing {
     }
 
     /*
-     * Funcion principal, dada una lista de URLs muestra las que no son seguras
+     * Funcion principal del modulo, dada una lista de URLs devuelve las que no son seguras
      * Ver: https://developers.google.com/safe-browsing/v4/lookup-api
      */
-    // TODO: ¿Cambiar comportamiento para que devuelva lista de seguras|no seguras por ejemplo?
-    public static void checkURLs(List<String> URLs) {
-        try {
-            final URL url = new URL(base_URL);
-            // Get a URLConnection object, to write to POST method
-            final HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-            connect.setRequestMethod("POST");
-            connect.setRequestProperty("Content-Type", "application/json");
-            // Specify connection settings
-            connect.setDoInput(true);
-            connect.setDoOutput(true);
-            // Crear la peticion con los datos de cliente y threats
-            final FindThreatMatchesRequest request = new FindThreatMatchesRequest();
-            final ClientInfo clientInfo = new ClientInfo();
-            clientInfo.setClientId(client_Name);
-            clientInfo.setClientVersion(client_Version);
-            request.setClient(clientInfo);
-            ThreatInfo threatInfo = createCompleteThreatInfo(URLs);
-            request.setThreatInfo(threatInfo);
+    // TODO: ¿Cambiar comportamiento para que devuelva lista de seguras por ejemplo?
+    public static List<String> checkURLs(List<String> URLs) throws IOException, GeneralSecurityException {
+        final URL url = new URL(base_URL);
+        // Get a URLConnection object, to write to POST method
+        final HttpURLConnection connect = (HttpURLConnection) url.openConnection();
+        connect.setRequestMethod("POST");
+        connect.setRequestProperty("Content-Type", "application/json");
+        // Specify connection settings
+        connect.setDoInput(true);
+        connect.setDoOutput(true);
+        // Crear la peticion con los datos de cliente y threats
+        final FindThreatMatchesRequest request = new FindThreatMatchesRequest();
+        final ClientInfo clientInfo = new ClientInfo();
+        clientInfo.setClientId(client_Name);
+        clientInfo.setClientVersion(client_Version);
+        request.setClient(clientInfo);
+        ThreatInfo threatInfo = createCompleteThreatInfo(URLs);
+        request.setThreatInfo(threatInfo);
 
-            final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-            final JacksonFactory GOOGLE_JSON_FACTORY = JacksonFactory.getDefaultInstance();
+        final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        final JacksonFactory GOOGLE_JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
-            Safebrowsing.Builder safebrowsingBuilder = new Safebrowsing.Builder(httpTransport, GOOGLE_JSON_FACTORY, null);
-            safebrowsingBuilder.setApplicationName(client_Name);
-            Safebrowsing safebrowsing = safebrowsingBuilder.build();
-            // Enviar peticion y obtener respuesta
-            FindThreatMatchesResponse findThreatMatchesResponse = safebrowsing.threatMatches().find(request).setKey(api_key).execute();
-            //Obtener y mostrar la lista de coincidencias (urls maliciosas)
-            List<ThreatMatch> threatMatches = findThreatMatchesResponse.getMatches();
-            if (threatMatches != null && threatMatches.size() > 0) {
-                for (ThreatMatch threatMatch : threatMatches) {
-                    System.out.println(threatMatch.getThreat().getUrl());
-                }
+        Safebrowsing.Builder safebrowsingBuilder = new Safebrowsing.Builder(httpTransport, GOOGLE_JSON_FACTORY, null);
+        safebrowsingBuilder.setApplicationName(client_Name);
+        Safebrowsing safebrowsing = safebrowsingBuilder.build();
+        // Enviar peticion y obtener respuesta
+        FindThreatMatchesResponse findThreatMatchesResponse = safebrowsing.threatMatches().find(request).setKey(api_key).execute();
+        //Obtener y mostrar la lista de coincidencias (urls maliciosas)
+        List<ThreatMatch> threatMatches = findThreatMatchesResponse.getMatches();
+        List<String> maliciousURLs = new ArrayList<>();
+        if (threatMatches != null && threatMatches.size() > 0) {
+            for (ThreatMatch threatMatch : threatMatches) {
+                maliciousURLs.add(threatMatch.getThreat().getUrl());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        return maliciousURLs;
     }
 }
