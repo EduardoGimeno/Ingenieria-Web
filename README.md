@@ -1,6 +1,6 @@
 # Ingenieria-Web  
 Para trabajar he utilizado IntelliJ que detecta la configuración de gradle.  
-He probado el código añadiendo la llamada a la función directamente desde la main de Application.java.
+He probado el código mediante *gradle check* y creando las clases correspondientes en la carpeta test.
 
 ## Google Safe Browsing
 Hay dos opciones disponibles para comprobar si una URL es segura con Google Safe Browsing, [Lookup API](https://developers.google.com/safe-browsing/v4/lookup-api) y [Update API](https://developers.google.com/safe-browsing/v4/update-api). De momento se utiliza la primera porque es más sencilla.
