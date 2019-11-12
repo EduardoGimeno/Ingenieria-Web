@@ -8,8 +8,11 @@ import org.springframework.web.bind.annotation.*;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.ShortURLService;
+import urlshortener.utils.HTTPInfo;
 
 import javax.servlet.http.HttpServletRequest;
+
+import java.io.IOException;
 import java.net.URI;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -18,16 +21,24 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 public class UrlShortenerController {
     private final ShortURLService shortUrlService;
 
+    private final HTTPInfo httpInfo;
+
     private final ClickService clickService;
 
-    public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService) {
+    public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, HTTPInfo httpInfo) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
+        this.httpInfo = httpInfo;
     }
 
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
-    public ResponseEntity<?> redirectTo(@PathVariable String id,
-                                        HttpServletRequest request) {
+    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) {
+        String uaHeader = request.getHeader("User-Agent");
+        try {
+            String info = httpInfo.getInfo(uaHeader);
+        } catch (IOException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         ShortURL l = shortUrlService.findByKey(id);
         if (l != null) {
             clickService.saveClick(id, extractIP(request));
@@ -39,8 +50,14 @@ public class UrlShortenerController {
 
     @RequestMapping(value = "/link", method = RequestMethod.POST)
     public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
-                                              @RequestParam(value = "sponsor", required = false) String sponsor,
-                                              HttpServletRequest request) {
+            @RequestParam(value = "sponsor", required = false) String sponsor, HttpServletRequest request) {
+        String uaHeader = request.getHeader("User-Agent");
+        String info = new String();
+        try {
+            info = httpInfo.getInfo(uaHeader);
+        } catch (IOException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         UrlValidator urlValidator = new UrlValidator(new String[]{"http",
                 "https"});
         if (urlValidator.isValid(url)) {
