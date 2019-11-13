@@ -8,12 +8,15 @@ import org.springframework.web.bind.annotation.*;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.ShortURLService;
+import urlshortener.utils.SafeBrowsing;
 import urlshortener.utils.HTTPInfo;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.io.IOException;
 import java.net.URI;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -63,6 +66,20 @@ public class UrlShortenerController {
             return new ResponseEntity<>(su, h, HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(value = "/safecheck/{url}", method = RequestMethod.GET)
+    public ResponseEntity<?> check(@PathVariable String url,
+                                        HttpServletRequest request) {
+        try {
+            HttpHeaders h = new HttpHeaders();
+            if(SafeBrowsing.checkURLs(Collections.singletonList(url)).isEmpty()) {
+                return new ResponseEntity<>("Safe", h, HttpStatus.OK);
+            }
+            else return new ResponseEntity<>("Unsafe", h, HttpStatus.OK);
+        } catch (IOException | GeneralSecurityException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
