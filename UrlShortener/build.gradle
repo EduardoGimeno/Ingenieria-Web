@@ -25,6 +25,8 @@ dependencies {
     implementation 'com.google.apis:google-api-services-safebrowsing:v4-rev123-1.25.0'
     implementation 'com.github.ua-parser:uap-java:1.4.3'
 
+    implementation "com.opencsv:opencsv:4.0"
+
     runtime 'org.webjars:bootstrap:3.3.5'
     runtime 'org.webjars:jquery:2.1.4'
 

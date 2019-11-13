@@ -8,12 +8,15 @@ import org.springframework.web.bind.annotation.*;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.ShortURLService;
-import urlshortener.utils.SafeBrowsing;
-import urlshortener.utils.HTTPInfo;
+
+import urlshortener.utils.*;
+
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,6 +72,52 @@ public class UrlShortenerController {
         }
     }
 
+    @RequestMapping(value = "/linkCSV", method = RequestMethod.POST)
+    public ResponseEntity<ShortURL> shortenerCSV(@RequestParam("path") String url,
+                                              @RequestParam(value = "sponsor", required = false) String sponsor,
+                                              HttpServletRequest request) {
+        UrlValidator urlValidator = new UrlValidator(new String[]{"http",
+                "https"});
+        List<String[]> records= CSVController.readCSV(url);
+        int size= url.indexOf(".csv");
+        String newPath=url.substring(0, size)+"response.csv";
+        String[] record;
+        List<String[]> newRecord= new ArrayList<>();
+        /*for(String[] record: records){
+            if(urlValidator.isValid(record[0])){
+                ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
+                String[]newRecord={record[0],su.getHash()};
+                CSVController.writeCSV(newPath, newRecord);
+            }
+            else{
+                String[]newRecord={record[0],"ERROR"};
+                CSVController.writeCSV(newPath, newRecord);
+            }
+        }
+        if(records.isEmpty()){
+            String[] record={"ERROR"};
+                CSVController.writeCSV(newPath,record);
+        }*/
+        for(int i=0; i< records.size();i++){
+            record= records.get(i);
+            if(urlValidator.isValid(record[0]) && shortUrlService.findByKey(record[0])== null){
+                ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
+                String[] args={record[0],su.getHash()};
+                newRecord.add(args);
+            }
+            else if(shortUrlService.findByKey(record[0])!= null){
+                ShortURL req= shortUrlService.findByKey(record[0]);
+                String[] args={record[0],req.getHash()};
+                newRecord.add(args);
+            }
+            else{
+                String[] args={record[0],"ERROR"};
+                newRecord.add(args);
+            }
+        }
+        CSVController.writeCSV(newPath, newRecord);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
     @RequestMapping(value = "/safecheck/{url}", method = RequestMethod.GET)
     public ResponseEntity<?> check(@PathVariable String url,
                                         HttpServletRequest request) {
