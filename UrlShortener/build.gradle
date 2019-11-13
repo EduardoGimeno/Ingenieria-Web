@@ -21,6 +21,9 @@ dependencies {
 
     implementation 'commons-validator:commons-validator:1.6'
     implementation 'com.google.guava:guava:28.1-jre'
+    
+    implementation 'com.google.apis:google-api-services-safebrowsing:v4-rev123-1.25.0'
+    implementation 'com.github.ua-parser:uap-java:1.4.3'
 
     runtime 'org.webjars:bootstrap:3.3.5'
     runtime 'org.webjars:jquery:2.1.4'
