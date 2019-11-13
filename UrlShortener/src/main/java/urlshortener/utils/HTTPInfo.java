@@ -7,14 +7,22 @@ import ua_parser.Client;
 
 public class HTTPInfo {
     /*
-     * Muestra la información de la cabecera User-Agent de una petición HTTP
+     * Obtiene el sistema operativo de la cabecera USER-AGENT
      */
-    public String getInfo(String uaHeader) throws IOException {
+    public String getOS(String uaHeader) throws IOException {
         Parser uaParser = new Parser();
         Client c = uaParser.parse(uaHeader);
         String os = c.os.family;
+        return os;
+    }
+
+    /*
+     * Obtiene el navegador de la cabecera USER-AGENT
+     */
+    public String getNav(String uaHeader) throws IOException {
+        Parser uaParser = new Parser();
+        Client c = uaParser.parse(uaHeader);
         String nav = c.userAgent.family;
-        String info = "OS: " + os + " NAV: " + nav;
-        return info;
+        return nav;
     }
 }

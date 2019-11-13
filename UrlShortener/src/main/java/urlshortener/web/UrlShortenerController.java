@@ -34,14 +34,17 @@ public class UrlShortenerController {
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
     public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) {
         String uaHeader = request.getHeader("User-Agent");
+        String os = new String();
+        String brw = new String();
         try {
-            String info = httpInfo.getInfo(uaHeader);
+            os = httpInfo.getOS(uaHeader);
+            brw = httpInfo.getNav(uaHeader);
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         ShortURL l = shortUrlService.findByKey(id);
         if (l != null) {
-            clickService.saveClick(id, extractIP(request));
+            clickService.saveClick(id, extractIP(request), os, brw);
             return createSuccessfulRedirectToResponse(l);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -51,13 +54,6 @@ public class UrlShortenerController {
     @RequestMapping(value = "/link", method = RequestMethod.POST)
     public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
             @RequestParam(value = "sponsor", required = false) String sponsor, HttpServletRequest request) {
-        String uaHeader = request.getHeader("User-Agent");
-        String info = new String();
-        try {
-            info = httpInfo.getInfo(uaHeader);
-        } catch (IOException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
         UrlValidator urlValidator = new UrlValidator(new String[]{"http",
                 "https"});
         if (urlValidator.isValid(url)) {
