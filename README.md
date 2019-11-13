@@ -1,6 +1,24 @@
-# Ingenieria-Web  
-Para trabajar he utilizado IntelliJ que detecta la configuración de gradle.  
-He probado el código mediante *gradle check* y creando las clases correspondientes en la carpeta test.
+# Ingenieria-Web
+
+## build.gralde
+Usar implementation en lugar de compile.
+Añadido implementation 'com.github.ua-parser:uap-java:1.4.3'
+./gradlew dependencies permite ver si todo se ha importado correctamente.
+
+## HTTP header information extraction
+Utilizado [Maven](https://mvnrepository.com/artifact/com.github.ua-parser/uap-java/1.4.3), [Github](https://github.com/ua-parser/uap-java)
+
+Desde redirectTo de UrlShortenerController se utiliza getOS y getNav de /utils/HTTPInfo.java para obtener un string con el sistema operativo y el navegador. Una vez obtenidos en saveClick se introducen como argumentos
+para ser guardados en la base de datos. Si no se pueden obtener se devuelve INTERNAL_SERVER_ERROR en la respuesta.
+
+En ClickBuilder.java se han añadido operaciones para añadir valor a los campos browser y platform de la clase
+click. En ClickService.java se utilizan para añadir los valores necesarios a la clase Click y guardar la instancia en la base de datos.
+
+Añadidos tests en test/utils/HTTÌnfoTets.java que comprueban que se extraen bien ambos datos dada una
+cabecera USER-AGENT creada. Se prueba con diferentes sistemas operativos y navegadores.
+
+### TODO
+¿Tests de integración?
 
 ## Google Safe Browsing
 Hay dos opciones disponibles para comprobar si una URL es segura con Google Safe Browsing, [Lookup API](https://developers.google.com/safe-browsing/v4/lookup-api) y [Update API](https://developers.google.com/safe-browsing/v4/update-api). De momento se utiliza la primera porque es más sencilla.
@@ -25,14 +43,3 @@ Hay dos opciones disponibles para comprobar si una URL es segura con Google Safe
  * Revisar los tipos de [amenazas](https://developers.google.com/safe-browsing/v4/reference/rest/v4/ThreatType), [plataformas](https://developers.google.com/safe-browsing/v4/reference/rest/v4/PlatformType) y [entradas](https://developers.google.com/safe-browsing/v4/reference/rest/v4/ThreatEntryType) que nos interesa analizar.
  * Ajustar comportamiento del método *checkURLs*, ¿devolver lista de URLs seguras|inseguras?
  * Si el controller se queda añadir casos error, salida correcta,...
-
-## Lector/escritor de CSV
-De momento se ha comenzado con la idea de utilizar [OpenCSV](http://opencsv.sourceforge.net/).
-
-**Cambios realizados para Lector/escritor de CSV:**
- * Añadido a build.gradle: compile group: 'com.opencsv', name: 'opencsv', version: '4.1'
- * Creada clase en en src/main/java/urlshortener/utils/CSVOperations
-
-### TODOLIST:
- * Funciones principales
- * Banco de pruebas.
