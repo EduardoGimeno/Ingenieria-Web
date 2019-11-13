@@ -16,6 +16,8 @@ CREATE TABLE SHORTURL
     SAFE    BOOLEAN,                 -- Safe target
     IP      VARCHAR(20),             -- IP
     COUNTRY VARCHAR(50),             -- Country
+    OS      VARCHAR(20),             -- OS
+    NAV     VARCHAR(20)              -- Navigator
 );
 
 -- Click
@@ -29,5 +31,7 @@ CREATE TABLE CLICK
     BROWSER  VARCHAR(50),                                                 -- Browser
     PLATFORM VARCHAR(50),                                                 -- Platform
     IP       VARCHAR(20),                                                 -- IP
-    COUNTRY  VARCHAR(50)                                                  -- Country
+    COUNTRY  VARCHAR(50),                                                 -- Country
+    OS      VARCHAR(20),                                                  -- OS
+    NAV     VARCHAR(20)                                                   -- Navigator
 );

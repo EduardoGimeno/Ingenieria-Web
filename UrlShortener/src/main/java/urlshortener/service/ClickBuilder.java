@@ -59,4 +59,13 @@ public class ClickBuilder {
         return this;
     }
 
+    ClickBuilder platform(String os) {
+        this.platform = os;
+        return this;
+    }
+
+    ClickBuilder browser(String brw) {
+        this.browser = brw;
+        return this;
+    }
 }
