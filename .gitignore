@@ -34,3 +34,5 @@ out/
 # Other
 
 db/
+
+.project
