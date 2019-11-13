@@ -5,9 +5,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import urlshortener.service.ShortURLService;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
-import urlshortener.service.ShortURLService;
+import urlshortener.service.HTTPInfo;
 
 import urlshortener.utils.*;
 
@@ -37,17 +40,17 @@ public class UrlShortenerController {
         this.httpInfo = httpInfo;
     }
 
+    //******************************************************************************//
+    //                                                                              //
+    //                          REQUEST HANDLER METHODS                             //
+    //                                                                              //
+    //******************************************************************************//
+
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
-    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws Exception {
         String uaHeader = request.getHeader("User-Agent");
-        String os = new String();
-        String brw = new String();
-        try {
-            os = httpInfo.getOS(uaHeader);
-            brw = httpInfo.getNav(uaHeader);
-        } catch (IOException e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        String os = httpInfo.getOS(uaHeader);
+        String brw = httpInfo.getNav(uaHeader);
         ShortURL l = shortUrlService.findByKey(id);
         if (l != null) {
             clickService.saveClick(id, extractIP(request), os, brw);
@@ -141,4 +144,15 @@ public class UrlShortenerController {
         h.setLocation(URI.create(l.getTarget()));
         return new ResponseEntity<>(h, HttpStatus.valueOf(l.getMode()));
     }
+
+    //******************************************************************************//
+    //                                                                              //
+    //                          EXCEPTION HANDLING METHODS                          //
+    //                                                                              //
+    //******************************************************************************//
+
+    @ResponseStatus(value=HttpStatus.INTERNAL_SERVER_ERROR, 
+                reason="Error obtaining data of USER-AGENT header") 
+    @ExceptionHandler(IOException.class)
+    public void conflict() {}
 }
