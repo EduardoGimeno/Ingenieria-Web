@@ -11,12 +11,15 @@ import urlshortener.service.ShortURLService;
 
 import urlshortener.utils.*;
 
-import javax.servlet.http.HttpServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -114,6 +117,19 @@ public class UrlShortenerController {
         }
         CSVController.writeCSV(newPath, newRecord);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+    @RequestMapping(value = "/safecheck/{url}", method = RequestMethod.GET)
+    public ResponseEntity<?> check(@PathVariable String url,
+                                        HttpServletRequest request) {
+        try {
+            HttpHeaders h = new HttpHeaders();
+            if(SafeBrowsing.checkURLs(Collections.singletonList(url)).isEmpty()) {
+                return new ResponseEntity<>("Safe", h, HttpStatus.OK);
+            }
+            else return new ResponseEntity<>("Unsafe", h, HttpStatus.OK);
+        } catch (IOException | GeneralSecurityException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private String extractIP(HttpServletRequest request) {
