@@ -11,6 +11,7 @@ import urlshortener.service.ShortURLService;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
+import urlshortener.service.SafeBrowsingService;
 
 import urlshortener.utils.*;
 
@@ -47,18 +48,23 @@ public class UrlShortenerController {
     //******************************************************************************//
 
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
-    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws Exception {
-        String uaHeader = request.getHeader("User-Agent");
-        String os = httpInfo.getOS(uaHeader);
-        String brw = httpInfo.getNav(uaHeader);
-        ShortURL l = shortUrlService.findByKey(id);
-        if (l != null) {
-            clickService.saveClick(id, extractIP(request), os, brw);
-            return createSuccessfulRedirectToResponse(l);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) {
+        try {
+            String uaHeader = request.getHeader("User-Agent");
+            String os = httpInfo.getOS(uaHeader);
+            String brw = httpInfo.getNav(uaHeader);
+            ShortURL l = shortUrlService.findByKey(id);
+            if (l != null) {
+                clickService.saveClick(id, extractIP(request), os, brw);
+                return createSuccessfulRedirectToResponse(l);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
+	}
 
     @RequestMapping(value = "/link", method = RequestMethod.POST)
     public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
@@ -121,15 +127,15 @@ public class UrlShortenerController {
         CSVController.writeCSV(newPath, newRecord);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
+	
     @RequestMapping(value = "/safecheck/{url}", method = RequestMethod.GET)
     public ResponseEntity<?> check(@PathVariable String url,
-                                        HttpServletRequest request) {
+                                   HttpServletRequest request) {
         try {
             HttpHeaders h = new HttpHeaders();
-            if(SafeBrowsing.checkURLs(Collections.singletonList(url)).isEmpty()) {
+            if (SafeBrowsingService.checkURLs(Collections.singletonList(url)).isEmpty()) {
                 return new ResponseEntity<>("Safe", h, HttpStatus.OK);
-            }
-            else return new ResponseEntity<>("Unsafe", h, HttpStatus.OK);
+            } else return new ResponseEntity<>("Unsafe", h, HttpStatus.OK);
         } catch (IOException | GeneralSecurityException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

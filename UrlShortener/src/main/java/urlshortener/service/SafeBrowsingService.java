@@ -1,4 +1,4 @@
-package urlshortener.utils;
+package urlshortener.service;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -7,23 +7,17 @@ import com.google.api.services.safebrowsing.Safebrowsing;
 import com.google.api.services.safebrowsing.model.*;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class SafeBrowsing {
+public class SafeBrowsingService {
     // Api Key obtenible desde: https://console.cloud.google.com/apis/credentials
     // Se debe activar el API de Google Safe Browsing: https://console.cloud.google.com/apis/api/safebrowsing.googleapis.com/
     // TODO: ¿Usar key comun cifrada como en practica 2?
     private static final String api_key = "AIzaSyDhWGqSKhAFV2-q0Jmm9EL65s2qQE3EkrQ";
-    private static final String base_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=xxx";
-    private static final String threats_URL = "https://safebrowsing.googleapis.com/v4/threatLists?key=xxx";
     private static final String client_Name = "iwebtp6";
     private static final String client_Version = "0.1";
 
@@ -34,10 +28,6 @@ public class SafeBrowsing {
      */
     private static void getThreats() {
         try {
-            final URL url = new URL(threats_URL);
-            final HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-            connect.setRequestMethod("GET");
-            connect.setRequestProperty("Content-Type", "application/json");
             final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             final JacksonFactory GOOGLE_JSON_FACTORY = JacksonFactory.getDefaultInstance();
             Safebrowsing.Builder safebrowsingBuilder = new Safebrowsing.Builder(httpTransport, GOOGLE_JSON_FACTORY, null);
@@ -78,14 +68,6 @@ public class SafeBrowsing {
      */
     // TODO: ¿Cambiar comportamiento para que devuelva lista de seguras por ejemplo?
     public static List<String> checkURLs(List<String> URLs) throws IOException, GeneralSecurityException {
-        final URL url = new URL(base_URL);
-        // Get a URLConnection object, to write to POST method
-        final HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-        connect.setRequestMethod("POST");
-        connect.setRequestProperty("Content-Type", "application/json");
-        // Specify connection settings
-        connect.setDoInput(true);
-        connect.setDoOutput(true);
         // Crear la peticion con los datos de cliente y threats
         final FindThreatMatchesRequest request = new FindThreatMatchesRequest();
         final ClientInfo clientInfo = new ClientInfo();
