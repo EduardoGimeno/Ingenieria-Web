@@ -47,7 +47,7 @@ public class UrlShortenerController {
     //******************************************************************************//
 
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
-    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws Exception {
+    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws RuntimeException,IOException{
         String uaHeader = request.getHeader("User-Agent");
         String os = httpInfo.getOS(uaHeader);
         String brw = httpInfo.getNav(uaHeader);
@@ -62,7 +62,7 @@ public class UrlShortenerController {
 
     @RequestMapping(value = "/link", method = RequestMethod.POST)
     public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
-            @RequestParam(value = "sponsor", required = false) String sponsor, HttpServletRequest request) {
+            @RequestParam(value = "sponsor", required = false) String sponsor, HttpServletRequest request) throws IOException{
         UrlValidator urlValidator = new UrlValidator(new String[]{"http",
                 "https"});
         if (urlValidator.isValid(url)) {
@@ -78,7 +78,7 @@ public class UrlShortenerController {
     @RequestMapping(value = "/linkCSV", method = RequestMethod.POST)
     public ResponseEntity<ShortURL> shortenerCSV(@RequestParam("path") String url,
                                               @RequestParam(value = "sponsor", required = false) String sponsor,
-                                              HttpServletRequest request) {
+                                              HttpServletRequest request) throws IOException{
         UrlValidator urlValidator = new UrlValidator(new String[]{"http",
                 "https"});
         List<String[]> records= CSVController.readCSV(url);
@@ -154,5 +154,6 @@ public class UrlShortenerController {
     @ResponseStatus(value=HttpStatus.INTERNAL_SERVER_ERROR, 
                 reason="Error obtaining data of USER-AGENT header") 
     @ExceptionHandler(IOException.class)
-    public void conflict() {}
+    public void conflict() {
+    }
 }

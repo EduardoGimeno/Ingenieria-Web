@@ -2,9 +2,12 @@ package urlshortener.service;
 
 import java.io.IOException;
 
+import org.springframework.stereotype.Service;
+
 import ua_parser.Parser;
 import ua_parser.Client;
 
+@Service
 public class HTTPInfo {
     /*
      * Obtiene el sistema operativo de la cabecera USER-AGENT
