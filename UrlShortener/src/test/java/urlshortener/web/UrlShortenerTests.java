@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static urlshortener.fixtures.ShortURLFixture.someUrl;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.junit.Before;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
+import urlshortener.service.HTTPInfo;
 import urlshortener.service.ShortURLService;
 
 public class UrlShortenerTests {
@@ -36,6 +38,9 @@ public class UrlShortenerTests {
 
     @Mock
     private ShortURLService shortUrlService;
+
+    @Mock
+    private HTTPInfo httpInfo;
 
     @InjectMocks
     private UrlShortenerController urlShortener;
@@ -111,7 +116,7 @@ public class UrlShortenerTests {
                 .andExpect(status().isBadRequest());
     }
 
-    private void configureSave(String sponsor) {
+    private void configureSave(String sponsor) throws IOException{
         when(shortUrlService.save(any(), any(), any()))
                 .then((Answer<ShortURL>) invocation -> new ShortURL(
                         "f684a3c4",
