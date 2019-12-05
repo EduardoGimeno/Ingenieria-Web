@@ -9,11 +9,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import urlshortener.service.ShortURLService;
 import urlshortener.domain.ShortURL;
+import urlshortener.service.CSVService;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
-
-import urlshortener.utils.*;
-
+import urlshortener.service.SafeBrowsingService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -47,11 +46,11 @@ public class UrlShortenerController {
     //******************************************************************************//
 
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
-    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws RuntimeException,IOException{
+    public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws RuntimeException,IOException {
+        ShortURL l = shortUrlService.findByKey(id);
         String uaHeader = request.getHeader("User-Agent");
         String os = httpInfo.getOS(uaHeader);
         String brw = httpInfo.getNav(uaHeader);
-        ShortURL l = shortUrlService.findByKey(id);
         if (l != null) {
             clickService.saveClick(id, extractIP(request), os, brw);
             return createSuccessfulRedirectToResponse(l);
@@ -81,7 +80,7 @@ public class UrlShortenerController {
                                               HttpServletRequest request) throws IOException{
         UrlValidator urlValidator = new UrlValidator(new String[]{"http",
                 "https"});
-        List<String[]> records= CSVController.readCSV(url);
+        List<String[]> records= CSVService.readCSV(url);
         int size= url.indexOf(".csv");
         String newPath=url.substring(0, size)+"response.csv";
         String[] record;
@@ -118,7 +117,7 @@ public class UrlShortenerController {
                 newRecord.add(args);
             }
         }
-        CSVController.writeCSV(newPath, newRecord);
+        CSVService.writeCSV(newPath, newRecord);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
     @RequestMapping(value = "/safecheck/{url}", method = RequestMethod.GET)
@@ -126,7 +125,7 @@ public class UrlShortenerController {
                                         HttpServletRequest request) {
         try {
             HttpHeaders h = new HttpHeaders();
-            if(SafeBrowsing.checkURLs(Collections.singletonList(url)).isEmpty()) {
+            if(SafeBrowsingService.checkURLs(Collections.singletonList(url)).isEmpty()) {
                 return new ResponseEntity<>("Safe", h, HttpStatus.OK);
             }
             else return new ResponseEntity<>("Unsafe", h, HttpStatus.OK);

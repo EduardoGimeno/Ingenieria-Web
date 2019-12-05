@@ -1,10 +1,12 @@
-package urlshortener.utils;
+package urlshortener.service;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.safebrowsing.Safebrowsing;
 import com.google.api.services.safebrowsing.model.*;
+
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -17,7 +19,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class SafeBrowsing {
+@Service
+public class SafeBrowsingService {
     // Api Key obtenible desde: https://console.cloud.google.com/apis/credentials
     // Se debe activar el API de Google Safe Browsing: https://console.cloud.google.com/apis/api/safebrowsing.googleapis.com/
     // TODO: ¿Usar key comun cifrada como en practica 2?

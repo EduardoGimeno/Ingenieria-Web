@@ -1,4 +1,4 @@
-package urlshortener.utils;
+package urlshortener.service;
 
 import com.opencsv.CSVReader;
 import java.io.FileReader;

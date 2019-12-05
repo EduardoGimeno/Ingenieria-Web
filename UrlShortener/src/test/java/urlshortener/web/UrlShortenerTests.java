@@ -3,6 +3,7 @@ package urlshortener.web;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,6 +22,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -52,10 +57,23 @@ public class UrlShortenerTests {
     }
 
     @Test
+    public void httpHeaderInfoSavedOnDataBase() throws Exception {
+        when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
+        when(httpInfo.getNav("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")).thenReturn("Firefox");
+        when(httpInfo.getOS("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")).thenReturn("Windows");
+
+        mockMvc.perform(get("/{id}", "someKey").header(HttpHeaders.USER_AGENT, 
+                "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"))
+                .andDo(print());
+        
+        verify(clickService).saveClick("someKey", "127.0.0.1", "Windows", "Firefox");
+    }
+
+    @Test
     public void thatRedirectToReturnsTemporaryRedirectIfKeyExists()
             throws Exception {
         when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
-
+  
         mockMvc.perform(get("/{id}", "someKey")).andDo(print())
                 .andExpect(status().isTemporaryRedirect())
                 .andExpect(redirectedUrl("http://example.com/"));

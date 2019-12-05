@@ -1,4 +1,4 @@
-package urlshortener.utils;
+package urlshortener.service;
 
 import java.io.Reader;
 import java.io.Writer;
@@ -10,8 +10,10 @@ import java.util.List;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
+import org.springframework.stereotype.Service;
 
-public class CSVController{
+@Service
+public class CSVService {
     public static List<String[]> readCSV(String path){
         List<String[]> records= new ArrayList<>();
         try{

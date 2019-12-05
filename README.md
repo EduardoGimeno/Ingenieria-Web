@@ -9,10 +9,10 @@ Recurso externo utilizado: [Maven](https://mvnrepository.com/artifact/com.github
 
 ### DONE
 Ficheros creados: HTTPInfo.java, HTTPInfoTest.java
-Ficheros modificados: UrlShortenerController.java, ClickService.java, ClickBuilder.java
+Ficheros modificados: UrlShortenerController.java, UrlShortenerControllerTest.java, ClickService.java, ClickBuilder.java
 
-### TODO
-* Test de integración
+### ESTADO
+Funcionalidad completada, se han realizado test unitarios y de integración
 
 ## Google Safe Browsing
 Hay dos opciones disponibles para comprobar si una URL es segura con Google Safe Browsing, [Lookup API](https://developers.google.com/safe-browsing/v4/lookup-api) y [Update API](https://developers.google.com/safe-browsing/v4/update-api). De momento se utiliza la primera porque es más sencilla.
