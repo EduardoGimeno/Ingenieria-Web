@@ -24,6 +24,7 @@ dependencies {
     
     implementation 'com.google.apis:google-api-services-safebrowsing:v4-rev123-1.25.0'
     implementation 'com.github.ua-parser:uap-java:1.4.3'
+    implementation 'com.squareup.okhttp:okhttp:2.7.5'
 
     implementation "com.opencsv:opencsv:4.0"
 

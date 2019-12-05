@@ -16,6 +16,8 @@ public interface ShortURLRepository {
 
     void update(ShortURL su);
 
+    void updateReachable(ShortURL su);
+
     void delete(String id);
 
     Long count();

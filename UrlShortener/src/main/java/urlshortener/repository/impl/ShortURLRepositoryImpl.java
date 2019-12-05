@@ -89,6 +89,17 @@ public class ShortURLRepositoryImpl implements ShortURLRepository {
     }
 
     @Override
+    public void updateReachable(ShortURL su) {
+        try {
+            jdbc.update(
+                    "update shorturl set reachable=?, t_reachable=? where hash=?",
+                    su.getReachable(), su.getT_Reachable(), su.getHash());
+        } catch (Exception e) {
+            log.debug("When update for hash {}", su.getHash(), e);
+        }
+    }
+
+    @Override
     public void delete(String hash) {
         try {
             jdbc.update("delete from shorturl where hash=?", hash);
