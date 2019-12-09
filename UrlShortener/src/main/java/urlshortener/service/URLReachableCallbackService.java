@@ -10,10 +10,20 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class URLReachableCallbackService implements Callback {
-    private final ShortURLService shortURLService;
+    private ShortURLService shortURLService;
+    private String hash;
 
-    public URLReachableCallbackService(ShortURLService shortURLService) {
+    public URLReachableCallbackService() {
+        this.shortURLService = null;
+        this.hash = null;
+    }
+
+    public void setShortURLService(ShortURLService shortURLService) {
         this.shortURLService = shortURLService;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 
     /*
@@ -22,7 +32,7 @@ public class URLReachableCallbackService implements Callback {
      */
     @Override
     public void onFailure(Request request, IOException e) {
-        
+        shortURLService.updateReachable(hash, false);
     }
 
     /*
@@ -30,6 +40,11 @@ public class URLReachableCallbackService implements Callback {
      */
     @Override
     public void onResponse(Response response) {
-
+        if (!response.isSuccessful()) {
+            shortURLService.updateReachable(hash, false);
+        }
+        else {
+            shortURLService.updateReachable(hash, true);
+        }
     }
 }

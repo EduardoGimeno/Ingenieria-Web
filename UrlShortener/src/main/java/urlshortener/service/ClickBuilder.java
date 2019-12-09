@@ -59,6 +59,8 @@ public class ClickBuilder {
         return this;
     }
 
+    //*************** Extracción información *****************//
+
     ClickBuilder platform(String os) {
         this.platform = os;
         return this;

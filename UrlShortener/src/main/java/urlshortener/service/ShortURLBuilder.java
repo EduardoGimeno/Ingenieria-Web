@@ -93,4 +93,16 @@ public class ShortURLBuilder {
         this.uri = extractor.apply(hash);
         return this;
     }
+
+    //*************** Alcanzabilidad *****************//
+
+    ShortURLBuilder hash(String hash) {
+        this.hash = hash;
+        return this;
+    }
+
+    ShortURLBuilder reachable(Boolean reachable) {
+        this.reachable = reachable;
+        return this;
+    }
 }

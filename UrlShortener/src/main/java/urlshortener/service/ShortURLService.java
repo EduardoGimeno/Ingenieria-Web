@@ -49,7 +49,19 @@ public class ShortURLService {
                 .treatAsSafe()
                 .ip(ip)
                 .unknownCountry()
+                .reachable(false)
                 .build();
         return shortURLRepository.save(su);
+    }
+
+    //*************** Alcanzabilidad *****************//
+
+    public void updateReachable(String hash, Boolean reachable) {
+        ShortURL su = ShortURLBuilder.newInstance()
+                .hash(hash)
+                .reachable(reachable)
+                .createdNow()
+                .build();
+        shortURLRepository.updateReachable(su);
     }
 }

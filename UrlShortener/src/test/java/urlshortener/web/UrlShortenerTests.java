@@ -33,6 +33,8 @@ import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
 import urlshortener.service.ShortURLService;
+import urlshortener.service.URLReachableCallbackService;
+import urlshortener.service.URLReachableService;
 
 public class UrlShortenerTests {
 
@@ -47,6 +49,12 @@ public class UrlShortenerTests {
     @Mock
     private HTTPInfo httpInfo;
 
+    @Mock
+    private URLReachableService urlReachableService;
+
+    @Mock
+    private URLReachableCallbackService urlReachableCallbackService;
+
     @InjectMocks
     private UrlShortenerController urlShortener;
 
@@ -57,7 +65,7 @@ public class UrlShortenerTests {
     }
 
     @Test
-    public void httpHeaderInfoSavedOnDataBase() throws Exception {
+    public void thathttpHeaderInfoSavedOnDataBase() throws Exception {
         when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
         when(httpInfo.getNav("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")).thenReturn("Firefox");
         when(httpInfo.getOS("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")).thenReturn("Windows");

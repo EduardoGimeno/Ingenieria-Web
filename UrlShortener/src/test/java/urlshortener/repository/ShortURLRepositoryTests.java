@@ -122,6 +122,23 @@ public class ShortURLRepositoryTests {
         assertEquals(su.getTarget(), "http://www.unizar.org/");
     }
 
+    //*************** Alcanzabilidad *****************//
+
+    @Test
+    public void thatUpdateReachable() {
+        repository.save(url2());
+        repository.updateReachable(urlReachable());
+        ShortURL su = repository.findByKey(url2().getHash());
+        assertEquals(su.getReachable(), true);
+    }
+
+    @Test
+    public void thatUpdateReachableFailsIfNotExists() {
+        repository.updateReachable(urlReachable());
+        assertSame(jdbc.queryForObject("select count(*) from SHORTURL",
+                Integer.class), 0);
+    }
+
     @After
     public void shutdown() {
         db.shutdown();

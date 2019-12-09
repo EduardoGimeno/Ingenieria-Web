@@ -41,19 +41,21 @@ public class Click {
         return referrer;
     }
 
-    public String getBrowser() {
-        return browser;
-    }
-
-    public String getPlatform() {
-        return platform;
-    }
-
     public String getIp() {
         return ip;
     }
 
     public String getCountry() {
         return country;
+    }
+
+    //*************** Extracción información *****************//
+
+    public String getBrowser() {
+        return browser;
+    }
+
+    public String getPlatform() {
+        return platform;
     }
 }

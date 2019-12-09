@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import urlshortener.service.ShortURLService;
+import urlshortener.service.URLReachableCallbackService;
+import urlshortener.service.URLReachableService;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.CSVService;
 import urlshortener.service.ClickService;
@@ -29,14 +31,24 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 public class UrlShortenerController {
     private final ShortURLService shortUrlService;
 
-    private final HTTPInfo httpInfo;
-
     private final ClickService clickService;
 
-    public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, HTTPInfo httpInfo) {
+    private final HTTPInfo httpInfo;
+
+    private final URLReachableService urlReachableService;
+
+    private URLReachableCallbackService urlReachableCallbackService;
+
+    public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
+                HTTPInfo httpInfo, URLReachableService urlReachableService, 
+                URLReachableCallbackService urlReachableCallbackService) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
+        //************************************************************************//
         this.httpInfo = httpInfo;
+        this.urlReachableService = urlReachableService;
+        urlReachableCallbackService.setShortURLService(shortUrlService);
+        this.urlReachableCallbackService = urlReachableCallbackService;
     }
 
     //******************************************************************************//
@@ -45,15 +57,30 @@ public class UrlShortenerController {
     //                                                                              //
     //******************************************************************************//
 
+    //******************************************************************************//
+    //                                                                              //
+    //                               NORMAL METHODS                                 //
+    //                                                                              //
+    //******************************************************************************//
+
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
     public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws RuntimeException,IOException {
         ShortURL l = shortUrlService.findByKey(id);
+        //********************* Extracción información ***************************//
         String uaHeader = request.getHeader("User-Agent");
         String os = httpInfo.getOS(uaHeader);
         String brw = httpInfo.getNav(uaHeader);
+        //************************************************************************//
         if (l != null) {
             clickService.saveClick(id, extractIP(request), os, brw);
-            return createSuccessfulRedirectToResponse(l);
+            //********************* Alcanzabilidad ***************************//
+            if (l.getReachable()) {
+                return createSuccessfulRedirectToResponse(l);
+            }
+            else {
+                return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
+            }
+            //***************************************************************//
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -66,6 +93,11 @@ public class UrlShortenerController {
                 "https"});
         if (urlValidator.isValid(url)) {
             ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
+            //********************* Alcanzabilidad ***************************//
+            String hash = su.getHash();
+            urlReachableCallbackService.setHash(hash);
+            urlReachableService.isReachableAsynchronous(url, urlReachableCallbackService);
+            //***************************************************************//
             HttpHeaders h = new HttpHeaders();
             h.setLocation(su.getUri());
             return new ResponseEntity<>(su, h, HttpStatus.CREATED);
@@ -73,6 +105,12 @@ public class UrlShortenerController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
+    //******************************************************************************//
+    //                                                                              //
+    //                                  CSV METHODS                                 //
+    //                                                                              //
+    //******************************************************************************//
 
     @RequestMapping(value = "/linkCSV", method = RequestMethod.POST)
     public ResponseEntity<ShortURL> shortenerCSV(@RequestParam("path") String url,
@@ -120,6 +158,13 @@ public class UrlShortenerController {
         CSVService.writeCSV(newPath, newRecord);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
+
+    //******************************************************************************//
+    //                                                                              //
+    //                           SAFE BROWSING METHODS                              //
+    //                                                                              //
+    //******************************************************************************//
+
     @RequestMapping(value = "/safecheck/{url}", method = RequestMethod.GET)
     public ResponseEntity<?> check(@PathVariable String url,
                                         HttpServletRequest request) {
@@ -133,6 +178,12 @@ public class UrlShortenerController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    //******************************************************************************//
+    //                                                                              //
+    //                               PRIVATE METHODS                                //
+    //                                                                              //
+    //******************************************************************************//
 
     private String extractIP(HttpServletRequest request) {
         return request.getRemoteAddr();

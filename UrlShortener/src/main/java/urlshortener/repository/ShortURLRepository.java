@@ -16,12 +16,12 @@ public interface ShortURLRepository {
 
     void update(ShortURL su);
 
-    void updateReachable(ShortURL su);
-
     void delete(String id);
 
     Long count();
 
     List<ShortURL> list(Long limit, Long offset);
 
+    //*************** Alcanzabilidad *****************//
+    void updateReachable(ShortURL su);
 }

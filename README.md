@@ -14,6 +14,20 @@ Ficheros modificados: UrlShortenerController.java, UrlShortenerControllerTest.ja
 ### ESTADO
 Funcionalidad completada, se han realizado test unitarios y de integración
 
+## Check if URL is reachable
+Recurso externo utilizado: [OkHttp](https://square.github.io/okhttp/)
+
+### DONE
+Ficheros creados: URLReachableService.java, URLReachableCallbackService.java, URLReachableServiceTets.java
+Ficheros modificados: UrlShortenerController.java, ShortUrlRepositoryImpl.java, ShortUrlRepository.java,
+ShortURL.java, ShortUrlBuilder.java, ShortUrlService.java, ShortURLFixture.java, ShortURLRepositoryTests.java, UrlShortenerControllerTests.java
+
+### ESTADO
+Los tests de ShortURLRepositoryTests.java fallan, faltan crear tests para los métodos asíncronos de
+URLReachableServiceTets.java y URLReachableCallbackService.java, faltan crear tests de integración
+en UrlShortenerControllerTests.java
+
+
 ## Google Safe Browsing
 Hay dos opciones disponibles para comprobar si una URL es segura con Google Safe Browsing, [Lookup API](https://developers.google.com/safe-browsing/v4/lookup-api) y [Update API](https://developers.google.com/safe-browsing/v4/update-api). De momento se utiliza la primera porque es más sencilla.
 

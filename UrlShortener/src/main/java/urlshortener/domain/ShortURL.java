@@ -72,10 +72,6 @@ public class ShortURL {
         return safe;
     }
 
-    public Date getT_Safe() {
-        return t_safe;
-    }
-
     public String getIP() {
         return ip;
     }
@@ -83,6 +79,14 @@ public class ShortURL {
     public String getCountry() {
         return country;
     }
+
+    //*************** Safe borwsing *****************//
+
+    public Date getT_Safe() {
+        return t_safe;
+    }
+
+    //*************** Alcanzabilidad *****************//
 
     public Boolean getReachable() {
         return reachable;
