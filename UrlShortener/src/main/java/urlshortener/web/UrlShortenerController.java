@@ -164,17 +164,18 @@ public class UrlShortenerController {
     //                           SAFE BROWSING METHODS                              //
     //                                                                              //
     //******************************************************************************//
-
-    @RequestMapping(value = "/safecheck/{url}", method = RequestMethod.GET)
-    public ResponseEntity<?> check(@PathVariable String url,
-                                        HttpServletRequest request) {
+    
+	@RequestMapping(value = "/list", method = RequestMethod.GET)
+    public ResponseEntity<?> check(HttpServletRequest request) {
         try {
             HttpHeaders h = new HttpHeaders();
-            if(SafeBrowsingService.checkURLs(Collections.singletonList(url)).isEmpty()) {
-                return new ResponseEntity<>("Safe", h, HttpStatus.OK);
+            List<ShortURL> list = shortUrlService.listURLs();
+            List<String> resp = new ArrayList<>();
+            for(ShortURL url: list) {
+                resp.add(url.getTarget() + ":" + url.getSafe());
             }
-            else return new ResponseEntity<>("Unsafe", h, HttpStatus.OK);
-        } catch (IOException | GeneralSecurityException e) {
+            return new ResponseEntity<>(resp.toString(), h, HttpStatus.OK);
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

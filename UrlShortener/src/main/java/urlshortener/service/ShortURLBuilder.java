@@ -78,6 +78,11 @@ public class ShortURLBuilder {
         this.safe = true;
         return this;
     }
+	
+	ShortURLBuilder treatAsUnSafe() {
+        this.safe = false;
+        return this;
+    }
 
     ShortURLBuilder ip(String ip) {
         this.ip = ip;
