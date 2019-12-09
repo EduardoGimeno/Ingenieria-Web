@@ -20,8 +20,11 @@ public class ShortURLBuilder {
     private String owner;
     private Integer mode;
     private Boolean safe;
+    private Date t_safe;
     private String ip;
     private String country;
+    private Boolean reachable;
+    private Date t_reachable;
 
     static ShortURLBuilder newInstance() {
         return new ShortURLBuilder();
@@ -37,8 +40,11 @@ public class ShortURLBuilder {
                 owner,
                 mode,
                 safe,
+                t_safe,
                 ip,
-                country
+                country,
+                reachable,
+                t_reachable
         );
     }
 

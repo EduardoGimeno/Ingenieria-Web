@@ -23,8 +23,8 @@ public class ShortURLRepositoryImpl implements ShortURLRepository {
     private static final RowMapper<ShortURL> rowMapper = (rs, rowNum) -> new ShortURL(rs.getString("hash"), rs.getString("target"),
             null, rs.getString("sponsor"), rs.getDate("created"),
             rs.getString("owner"), rs.getInt("mode"),
-            rs.getBoolean("safe"), rs.getString("ip"),
-            rs.getString("country"));
+            rs.getBoolean("safe"), rs.getDate("t_safe"), rs.getString("ip"), rs.getString("country"),
+            rs.getBoolean("reachable"), rs.getDate("t_reachable"));
 
     private JdbcTemplate jdbc;
 
@@ -46,10 +46,11 @@ public class ShortURLRepositoryImpl implements ShortURLRepository {
     @Override
     public ShortURL save(ShortURL su) {
         try {
-            jdbc.update("INSERT INTO shorturl VALUES (?,?,?,?,?,?,?,?,?)",
+            jdbc.update("INSERT INTO shorturl VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                     su.getHash(), su.getTarget(), su.getSponsor(),
                     su.getCreated(), su.getOwner(), su.getMode(), su.getSafe(),
-                    su.getIP(), su.getCountry());
+                    su.getT_Safe(),su.getIP(), su.getCountry(),su.getReachable(),
+                    su.getT_Reachable());
         } catch (DuplicateKeyException e) {
             log.debug("When insert for key {}", su.getHash(), e);
             return su;
@@ -79,10 +80,11 @@ public class ShortURLRepositoryImpl implements ShortURLRepository {
     public void update(ShortURL su) {
         try {
             jdbc.update(
-                    "update shorturl set target=?, sponsor=?, created=?, owner=?, mode=?, safe=?, ip=?, country=? where hash=?",
+                    "update shorturl set target=?, sponsor=?, created=?, owner=?, mode=?, safe=?,t_safe=?,ip=?, country=?,reachable=?,t_reachable=? where hash=?",
                     su.getTarget(), su.getSponsor(), su.getCreated(),
-                    su.getOwner(), su.getMode(), su.getSafe(), su.getIP(),
-                    su.getCountry(), su.getHash());
+                    su.getOwner(), su.getMode(), su.getSafe(),
+                    su.getT_Safe(),su.getIP(), su.getCountry(),su.getReachable(),
+                    su.getT_Reachable(),su.getHash());
         } catch (Exception e) {
             log.debug("When update for hash {}", su.getHash(), e);
         }

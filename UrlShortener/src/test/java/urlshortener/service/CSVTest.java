@@ -1,5 +1,6 @@
 package urlshortener.service;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -28,6 +29,7 @@ public class CSVTest {
             e.printStackTrace();
         }
     }*/
+    @Ignore
     @Test
     public void readAllCSVTest() {
         String path = "/home/jorge/test.csv";
@@ -41,6 +43,7 @@ public class CSVTest {
             e.printStackTrace();
         }
     }
+    @Ignore
     @Test
     public void writeCSVTest() {
         String path = "/home/jorge/test.csv";

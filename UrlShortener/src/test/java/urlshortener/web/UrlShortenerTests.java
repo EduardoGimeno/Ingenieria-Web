@@ -146,6 +146,9 @@ public class UrlShortenerTests {
                         0,
                         false,
                         null,
+                        null,
+                        null,
+                        false,
                         null));
     }
 }
