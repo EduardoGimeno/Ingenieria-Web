@@ -5,19 +5,17 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.safebrowsing.Safebrowsing;
 import com.google.api.services.safebrowsing.model.*;
-
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import urlshortener.domain.ShortURL;
+import urlshortener.repository.ShortURLRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
 
 @Service
 public class SafeBrowsingService {
@@ -25,22 +23,23 @@ public class SafeBrowsingService {
     // Se debe activar el API de Google Safe Browsing: https://console.cloud.google.com/apis/api/safebrowsing.googleapis.com/
     // TODO: ¿Usar key comun cifrada como en practica 2?
     private static final String api_key = "AIzaSyDhWGqSKhAFV2-q0Jmm9EL65s2qQE3EkrQ";
-    private static final String base_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=xxx";
-    private static final String threats_URL = "https://safebrowsing.googleapis.com/v4/threatLists?key=xxx";
     private static final String client_Name = "iwebtp6";
     private static final String client_Version = "0.1";
+    private static final Logger log = LoggerFactory
+            .getLogger(ClickService.class);
+    private final ShortURLRepository shortURLRepository;
+
+    public SafeBrowsingService(ShortURLRepository shortURLRepository) {
+        this.shortURLRepository = shortURLRepository;
+    }
 
     /*
      * Ver: https://developers.google.com/safe-browsing/v4/lists
      * Muestra las combinaciones de platformType, threatEntryType y threatType disponibles
      * Se podria usar para obtener dinamicamente esa informacion y usarla en la peticion
      */
-    private static void getThreats() {
+    private void getThreats() {
         try {
-            final URL url = new URL(threats_URL);
-            final HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-            connect.setRequestMethod("GET");
-            connect.setRequestProperty("Content-Type", "application/json");
             final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             final JacksonFactory GOOGLE_JSON_FACTORY = JacksonFactory.getDefaultInstance();
             Safebrowsing.Builder safebrowsingBuilder = new Safebrowsing.Builder(httpTransport, GOOGLE_JSON_FACTORY, null);
@@ -56,7 +55,7 @@ public class SafeBrowsingService {
 
     // Crea ThreatInfo con todas las posibles combinaciones existentes de ThreatType, PlatformType=ANY_PLATFORM y threatEntryType=URL
     // TODO: ¿Nos interesa threatEntryType=IP_RANGE, PlatformType=IOS|ANDROID?
-    private static ThreatInfo createCompleteThreatInfo(List<String> URLs) {
+    private ThreatInfo createCompleteThreatInfo(List<String> URLs) {
         ThreatInfo threatInfo = new ThreatInfo();
         // Tipo de threat que buscamos
         threatInfo.setThreatTypes(Arrays.asList("MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"));
@@ -80,15 +79,7 @@ public class SafeBrowsingService {
      * Ver: https://developers.google.com/safe-browsing/v4/lookup-api
      */
     // TODO: ¿Cambiar comportamiento para que devuelva lista de seguras por ejemplo?
-    public static List<String> checkURLs(List<String> URLs) throws IOException, GeneralSecurityException {
-        final URL url = new URL(base_URL);
-        // Get a URLConnection object, to write to POST method
-        final HttpURLConnection connect = (HttpURLConnection) url.openConnection();
-        connect.setRequestMethod("POST");
-        connect.setRequestProperty("Content-Type", "application/json");
-        // Specify connection settings
-        connect.setDoInput(true);
-        connect.setDoOutput(true);
+    public List<String> checkURLs(List<String> URLs) throws IOException, GeneralSecurityException {
         // Crear la peticion con los datos de cliente y threats
         final FindThreatMatchesRequest request = new FindThreatMatchesRequest();
         final ClientInfo clientInfo = new ClientInfo();
@@ -110,10 +101,40 @@ public class SafeBrowsingService {
         List<ThreatMatch> threatMatches = findThreatMatchesResponse.getMatches();
         List<String> maliciousURLs = new ArrayList<>();
         if (threatMatches != null && threatMatches.size() > 0) {
+            // Marcar como no seguras y eliminar de la lista de seguras
             for (ThreatMatch threatMatch : threatMatches) {
                 maliciousURLs.add(threatMatch.getThreat().getUrl());
+                List<ShortURL> ShortURLs = shortURLRepository.findByTarget(threatMatch.getThreat().getUrl());
+                for (ShortURL shorturl : ShortURLs) {
+                    shortURLRepository.mark(shorturl, false);
+                }
+                URLs.remove(threatMatch.getThreat().getUrl());
+            }
+        }
+        // Marcar como seguras
+        for (String url : URLs) {
+            List<ShortURL> ShortURLs = shortURLRepository.findByTarget(url);
+            for (ShortURL shorturl : ShortURLs) {
+                shortURLRepository.mark(shorturl, true);
             }
         }
         return maliciousURLs;
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    public void doSafeChecks() {
+        List<ShortURL> list = shortURLRepository.getURLsToCheck();
+        List<String> urls = new ArrayList<>();
+        for(ShortURL url: list) {
+            urls.add(url.getTarget());
+        }
+		if(!urls.isEmpty()){
+			try {
+				checkURLs(urls);
+			}
+			catch (Exception e) {
+				log.error(e.toString());
+			}
+		}
     }
 }

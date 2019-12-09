@@ -12,6 +12,7 @@ import urlshortener.web.UrlShortenerController;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import java.util.List;
 import java.util.function.*;
 import java.net.URI;
 
@@ -46,10 +47,14 @@ public class ShortURLService {
                 .createdNow()
                 .randomOwner()
                 .temporaryRedirect()
-                .treatAsSafe()
+                .treatAsUnSafe()
                 .ip(ip)
                 .unknownCountry()
                 .build();
         return shortURLRepository.save(su);
+    }
+	
+	public List<ShortURL> listURLs() {
+        return shortURLRepository.list(20L, 0L);
     }
 }

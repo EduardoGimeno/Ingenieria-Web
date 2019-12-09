@@ -142,4 +142,21 @@ public class ShortURLRepositoryImpl implements ShortURLRepository {
             return Collections.emptyList();
         }
     }
+
+    public boolean isSafe(String target) {
+        List<ShortURL> urls = jdbc.query("SELECT * FROM shorturl WHERE target = ? AND safe = TRUE",
+                    new Object[]{target}, rowMapper);
+        if (urls.isEmpty()) return false;
+        else return true;
+    }
+
+	// TODO: Condiciones de seleccion (mas visitadas?, mas antiguas?,...)
+    public List<ShortURL> getURLsToCheck() {
+        try {
+            return jdbc.query("(SELECT * FROM shorturl ORDER BY t_safe LIMIT 10)",
+                    new Object[]{}, rowMapper);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
 }
