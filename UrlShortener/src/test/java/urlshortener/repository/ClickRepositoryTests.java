@@ -15,6 +15,8 @@ import urlshortener.repository.impl.ShortURLRepositoryImpl;
 import static org.junit.Assert.*;
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 
+import java.sql.Date;
+
 public class ClickRepositoryTests {
 
     private EmbeddedDatabase db;
@@ -77,6 +79,30 @@ public class ClickRepositoryTests {
         assertEquals(repository.count().intValue(), 1);
         repository.delete(id2);
         assertEquals(repository.count().intValue(), 0);
+    }
+
+    //*************** Limitar redirecciones *****************//
+
+    @Test
+    public void thatNumberOfClicksCreatedAfterLimit() {
+        Date currentDate = new Date(System.currentTimeMillis());
+        Long time = currentDate.getTime();
+        time = time - 600000;
+        Date limit = new Date(time);
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        Long redirects = repository.countRedirects(ClickFixture.click(ShortURLFixture.url1()), limit);
+        assertEquals(redirects.longValue(), 2);
+    }
+
+    @Test
+    public void thatNumberOfClicksCreatedFailsIfTheresNoOneAfterLimit() {
+        Date currentDate = new Date(System.currentTimeMillis());
+        Long time = currentDate.getTime();
+        time = time - 600000;
+        Date limit = new Date(time);
+        Long redirects = repository.countRedirects(ClickFixture.click(ShortURLFixture.url1()), limit);
+        assertEquals(redirects.longValue(), 0);
     }
 
     @After

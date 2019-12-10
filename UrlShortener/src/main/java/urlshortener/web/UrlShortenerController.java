@@ -13,6 +13,7 @@ import urlshortener.domain.ShortURL;
 import urlshortener.service.CSVService;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
+import urlshortener.service.LimitRedirectionService;
 import urlshortener.service.SafeBrowsingService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,13 +32,17 @@ public class UrlShortenerController {
 
     private final URLReachableService urlReachableService;
 
+    private final LimitRedirectionService limitRedirectionService;
+
     public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
-                HTTPInfo httpInfo, URLReachableService urlReachableService) {
+                HTTPInfo httpInfo, URLReachableService urlReachableService,
+                LimitRedirectionService limitRedirectionService) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
         //************************************************************************//
         this.httpInfo = httpInfo;
         this.urlReachableService = urlReachableService;
+        this.limitRedirectionService = limitRedirectionService;
     }
 
     //******************************************************************************//
@@ -59,17 +64,19 @@ public class UrlShortenerController {
         String uaHeader = request.getHeader("User-Agent");
         String os = httpInfo.getOS(uaHeader);
         String brw = httpInfo.getNav(uaHeader);
-        //************************************************************************//
         if (l != null) {
-            clickService.saveClick(id, extractIP(request), os, brw);
-            //********************* Alcanzabilidad ***************************//
-            if (l.getReachable()) {
-                return createSuccessfulRedirectToResponse(l);
-            }
-            else {
-                return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
-            }
-            //***************************************************************//
+            //********************* Limitar redirecciones ***************************//
+            if (!limitRedirectionService.limitReached(l.getHash())) {
+                clickService.saveClick(id, extractIP(request), os, brw);
+                //********************* Alcanzabilidad ***************************//
+                if (l.getReachable()) {
+                    return createSuccessfulRedirectToResponse(l);
+                } else {
+                    return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
+                }
+            } else {
+                return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
+            }  
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -85,7 +92,6 @@ public class UrlShortenerController {
             //********************* Alcanzabilidad ***************************//
             String hash = su.getHash();
             urlReachableService.isReachableAsynchronous(url, hash);
-            //***************************************************************//
             HttpHeaders h = new HttpHeaders();
             h.setLocation(su.getUri());
             return new ResponseEntity<>(su, h, HttpStatus.CREATED);

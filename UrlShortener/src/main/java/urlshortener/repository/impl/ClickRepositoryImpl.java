@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import urlshortener.domain.Click;
 import urlshortener.repository.ClickRepository;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Types;
@@ -149,4 +150,17 @@ public class ClickRepositoryImpl implements ClickRepository {
         return -1L;
     }
 
+    //*************** Limitar redirecciones *****************//
+
+    @Override
+    public Long countRedirects(Click cl, Date limit) {
+        try {
+            return jdbc
+                    .queryForObject("select count(*) from click where hash=? and created>=?", 
+                    new Object[]{cl.getHash(), limit}, Long.class);
+        } catch (Exception e) {
+            log.debug("When counting", e);
+        }
+        return -1L;
+    }
 }

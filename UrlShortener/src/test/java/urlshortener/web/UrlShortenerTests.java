@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
+import urlshortener.service.LimitRedirectionService;
 import urlshortener.service.ShortURLService;
 import urlshortener.service.URLReachableService;
 
@@ -47,6 +48,9 @@ public class UrlShortenerTests {
 
     @Mock
     private URLReachableService urlReachableService;
+
+    @Mock
+    private LimitRedirectionService LimitRedirectionService;
 
     @InjectMocks
     private UrlShortenerController urlShortener;

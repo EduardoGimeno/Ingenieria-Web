@@ -18,14 +18,23 @@ Funcionalidad completada, se han realizado test unitarios y de integración
 Recurso externo utilizado: [OkHttp](https://square.github.io/okhttp/)
 
 ### DONE
-Ficheros creados: URLReachableService.java, URLReachableCallbackService.java, URLReachableServiceTets.java
+Ficheros creados: URLReachableService.java, URLReachableCallback.java
 Ficheros modificados: UrlShortenerController.java, ShortUrlRepositoryImpl.java, ShortUrlRepository.java,
 ShortURL.java, ShortUrlBuilder.java, ShortUrlService.java, ShortURLFixture.java, ShortURLRepositoryTests.java, UrlShortenerControllerTests.java
 
 ### ESTADO
-Los tests de ShortURLRepositoryTests.java fallan, faltan crear tests para los métodos asíncronos de
-URLReachableServiceTets.java y URLReachableCallbackService.java, faltan crear tests de integración
+Los tests de ShortURLRepositoryTests.java fallan, faltan crear tests de integración
 en UrlShortenerControllerTests.java
+
+## Limit number of redirections
+
+### DONE
+Ficheros creados: LimitRedirectionService.java
+Ficheros modificados: UrlShortenerController.java, ClickService.java, ClickRepository.java,
+ClickRepositoryImpl.java, ClickRepositoryTests.java, UrlShortenerTests.java
+
+### ESTADO
+Test para comprobar que devuelve una lista de clicks dado un limite falla y falta test de integración en UrlShortenerTests.java
 
 
 ## Google Safe Browsing

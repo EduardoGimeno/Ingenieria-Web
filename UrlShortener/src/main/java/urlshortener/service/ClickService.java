@@ -27,4 +27,12 @@ public class ClickService {
         log.info(cl != null ? "[" + hash + "] saved with id [" + cl.getId() + "]" : "[" + hash + "] was not saved");
     }
 
+    //*************** Limitar redirecciones *****************//
+
+    public Long countRedirects(String hash, Date limit) {
+        Click cl = ClickBuilder.newInstance()
+                .hash(hash)
+                .build();
+        return clickRepository.countRedirects(cl, limit);
+    }
 }

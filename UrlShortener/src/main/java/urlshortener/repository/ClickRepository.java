@@ -2,6 +2,7 @@ package urlshortener.repository;
 
 import urlshortener.domain.Click;
 
+import java.sql.Date;
 import java.util.List;
 
 public interface ClickRepository {
@@ -21,4 +22,8 @@ public interface ClickRepository {
     Long count();
 
     List<Click> list(Long limit, Long offset);
+
+    //*************** Limitar redirecciones *****************//
+
+    Long countRedirects(Click cl, Date limit);
 }
