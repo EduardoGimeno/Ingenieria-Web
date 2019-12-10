@@ -139,6 +139,20 @@ public class ShortURLRepositoryTests {
                 Integer.class), 0);
     }
 
+    @Test
+    public void thatGetUrlsToCheckReachability() {
+        repository.save(url1());
+        repository.save(url2());
+        List<ShortURL> su = repository.getURLsToCheckReachability();
+        assertEquals(2, su.size());
+    }
+
+    @Test
+    public void thatGetUrlsToCheckReachabilityFailsIfEmpty() {
+        List<ShortURL> su = repository.getURLsToCheckReachability();
+        assertEquals(0, su.size());
+    }
+
     @After
     public void shutdown() {
         db.shutdown();

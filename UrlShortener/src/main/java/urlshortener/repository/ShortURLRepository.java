@@ -21,6 +21,8 @@ public interface ShortURLRepository {
     Long count();
 
     List<ShortURL> list(Long limit, Long offset);
+
+    //*************** Safe browsing *****************//
 	
 	boolean isSafe(String target);
 
@@ -29,4 +31,6 @@ public interface ShortURLRepository {
     //*************** Alcanzabilidad *****************//
     
     void updateReachable(ShortURL su);
+
+    List<ShortURL> getURLsToCheckReachability();
 }

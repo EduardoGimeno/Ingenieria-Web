@@ -22,9 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -33,7 +30,6 @@ import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
 import urlshortener.service.ShortURLService;
-import urlshortener.service.URLReachableCallbackService;
 import urlshortener.service.URLReachableService;
 
 public class UrlShortenerTests {
@@ -51,9 +47,6 @@ public class UrlShortenerTests {
 
     @Mock
     private URLReachableService urlReachableService;
-
-    @Mock
-    private URLReachableCallbackService urlReachableCallbackService;
 
     @InjectMocks
     private UrlShortenerController urlShortener;

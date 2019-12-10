@@ -6,23 +6,12 @@ import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
-import org.springframework.stereotype.Service;
+public class URLReachableCallback implements Callback {
+    private final ShortURLService shortURLService;
+    private final String hash;
 
-@Service
-public class URLReachableCallbackService implements Callback {
-    private ShortURLService shortURLService;
-    private String hash;
-
-    public URLReachableCallbackService() {
-        this.shortURLService = null;
-        this.hash = null;
-    }
-
-    public void setShortURLService(ShortURLService shortURLService) {
+    public URLReachableCallback(ShortURLService shortURLService, String hash) {
         this.shortURLService = shortURLService;
-    }
-
-    public void setHash(String hash) {
         this.hash = hash;
     }
 

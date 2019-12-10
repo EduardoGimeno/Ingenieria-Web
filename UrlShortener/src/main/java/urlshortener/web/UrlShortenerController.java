@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import urlshortener.service.ShortURLService;
-import urlshortener.service.URLReachableCallbackService;
 import urlshortener.service.URLReachableService;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.CSVService;
@@ -21,11 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.Collections;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 @RestController
 public class UrlShortenerController {
@@ -37,18 +31,13 @@ public class UrlShortenerController {
 
     private final URLReachableService urlReachableService;
 
-    private URLReachableCallbackService urlReachableCallbackService;
-
     public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
-                HTTPInfo httpInfo, URLReachableService urlReachableService, 
-                URLReachableCallbackService urlReachableCallbackService) {
+                HTTPInfo httpInfo, URLReachableService urlReachableService) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
         //************************************************************************//
         this.httpInfo = httpInfo;
         this.urlReachableService = urlReachableService;
-        urlReachableCallbackService.setShortURLService(shortUrlService);
-        this.urlReachableCallbackService = urlReachableCallbackService;
     }
 
     //******************************************************************************//
@@ -95,8 +84,7 @@ public class UrlShortenerController {
             ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
             //********************* Alcanzabilidad ***************************//
             String hash = su.getHash();
-            urlReachableCallbackService.setHash(hash);
-            urlReachableService.isReachableAsynchronous(url, urlReachableCallbackService);
+            urlReachableService.isReachableAsynchronous(url, hash);
             //***************************************************************//
             HttpHeaders h = new HttpHeaders();
             h.setLocation(su.getUri());
@@ -161,7 +149,7 @@ public class UrlShortenerController {
 
     //******************************************************************************//
     //                                                                              //
-    //                           SAFE BROWSING METHODS                              //
+    //                                LIST METHODS                                  //
     //                                                                              //
     //******************************************************************************//
     
@@ -172,7 +160,7 @@ public class UrlShortenerController {
             List<ShortURL> list = shortUrlService.listURLs();
             List<String> resp = new ArrayList<>();
             for(ShortURL url: list) {
-                resp.add(url.getTarget() + ":" + url.getSafe());
+                resp.add(url.getTarget() + ":" + url.getSafe() + ":" + url.getReachable());
             }
             return new ResponseEntity<>(resp.toString(), h, HttpStatus.OK);
         } catch (Exception e) {
