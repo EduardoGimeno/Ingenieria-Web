@@ -50,4 +50,16 @@ public class ShortURLFixture {
         return new ShortURL("2", null, null, null, null, null, null, true,
                 null, null, null, true, null);
     }
+
+    public static ShortURL urlNotReachable() {
+        return new ShortURL("2", null, null, null, null, null, null, true,
+                null, null, null, false, null);
+    }
+
+    //*************** Google Safe Browsing *****************//
+
+    public static ShortURL urlNotSafe() {
+        return new ShortURL("2", null, null, null, null, null, null, false,
+                null, null, null, true, null);
+    }
 }

@@ -3,6 +3,7 @@ package urlshortener.web;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,11 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static urlshortener.fixtures.ShortURLFixture.someUrl;
+import static urlshortener.fixtures.ShortURLFixture.urlNotReachable;
+import static urlshortener.fixtures.ShortURLFixture.urlNotSafe;
 
 import java.io.IOException;
 import java.net.URI;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -27,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import urlshortener.domain.ShortURL;
+import urlshortener.repository.ShortURLRepository;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
 import urlshortener.service.LimitRedirectionService;
@@ -50,7 +55,7 @@ public class UrlShortenerTests {
     @Mock
     private URLReachableService urlReachableService;
 	
-	@Mock
+    @Mock
     private SafeBrowsingService safeBrowsingService;
 
     @Mock
@@ -65,6 +70,8 @@ public class UrlShortenerTests {
         this.mockMvc = MockMvcBuilders.standaloneSetup(urlShortener).build();
     }
 
+    //********************* Extracción información ***************************//
+
     @Test
     public void thathttpHeaderInfoSavedOnDataBase() throws Exception {
         when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
@@ -76,6 +83,70 @@ public class UrlShortenerTests {
                 .andDo(print());
         
         verify(clickService).saveClick("someKey", "127.0.0.1", "Windows", "Firefox");
+    }
+
+    //********************* Alcanzabilidad ***************************//
+
+    @Test
+    @Ignore
+    public void thatUrlReachabilitySavedOnDataBase() throws Exception {
+        configureSave("http://sponsor.com/");
+
+        mockMvc.perform(
+                post("/link").param("url", "http://example.com/").param(
+                        "sponsor", "http://sponsor.com/")).andDo(print())
+                .andExpect(redirectedUrl("http://localhost/f684a3c4"))
+                .andExpect(status().isCreated());
+
+        verify(shortUrlService, timeout(5000)).updateReachable("f684a3c4", true);
+    }
+
+    @Test
+    public void thatRedirectToFailsIfNoReachability() throws Exception {
+        when(shortUrlService.findByKey("someKey")).thenReturn(urlNotReachable());
+
+        mockMvc.perform(get("/{id}", "someKey")).andDo(print())
+                .andExpect(status().isBadGateway());
+    }
+
+    //********************* Google Safe Browsing ***************************//
+
+    @Test
+    @Ignore
+    public void thatUrlSafenessSavedOnDataBase() throws Exception {
+        configureSave("http://sponsor.com/");
+
+        mockMvc.perform(
+                post("/link").param("url", "http://example.com/").param(
+                        "sponsor", "http://sponsor.com/")).andDo(print())
+                .andExpect(redirectedUrl("http://localhost/f684a3c4"))
+                .andExpect(status().isCreated());
+
+        //verify(, timeout(5000));
+    }
+
+    @Test
+    public void thatRedirectToFailsIfNoSafe() throws Exception {
+        when(shortUrlService.findByKey("someKey")).thenReturn(urlNotSafe());
+
+        mockMvc.perform(get("/{id}", "someKey")).andDo(print())
+                .andExpect(status().isBadGateway());
+    }
+
+    //********************* Limitar redirecciones ***************************//
+
+    @Test
+    @Ignore
+    public void thatRedirectToFailsIfLimitReached() throws Exception {
+        when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
+
+        for (int i=0; i<urlShortener.getLimitRedirects(); ++i) {
+            mockMvc.perform(get("/{id}", "someKey")).andDo(print())
+                  .andExpect(status().isTemporaryRedirect()); 
+        }
+  
+        mockMvc.perform(get("/{id}", "someKey")).andDo(print())
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

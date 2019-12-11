@@ -4,6 +4,7 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -37,6 +38,10 @@ public class UrlShortenerController {
 
     private final LimitRedirectionService limitRedirectionService;
 
+    private final Long limitTime = new Long(600000);
+
+    private final Long limitRedirects = new Long(5);
+
     public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
                 HTTPInfo httpInfo, URLReachableService urlReachableService, SafeBrowsingService safeBrowsingService,
 				LimitRedirectionService limitRedirectionService) {
@@ -47,6 +52,12 @@ public class UrlShortenerController {
         this.urlReachableService = urlReachableService;
 		this.safeBrowsingService = safeBrowsingService;
         this.limitRedirectionService = limitRedirectionService;
+        this.limitRedirectionService.setLimitTime(limitTime);
+        this.limitRedirectionService.setMaxRedirects(limitRedirects);
+    }
+
+    public Long getLimitRedirects() {
+        return this.limitRedirects;
     }
 
     //******************************************************************************//
@@ -64,26 +75,26 @@ public class UrlShortenerController {
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
     public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request) throws RuntimeException,IOException {
         ShortURL l = shortUrlService.findByKey(id);
+
         //********************* Extracción información ***************************//
         String uaHeader = request.getHeader("User-Agent");
         String os = httpInfo.getOS(uaHeader);
         String brw = httpInfo.getNav(uaHeader);
-        if (l != null) {
-            //********************* Limitar redirecciones ***************************//
-            if (!limitRedirectionService.limitReached(l.getHash())) {
-                clickService.saveClick(id, extractIP(request), os, brw);
-                //********************* Alcanzabilidad y Google Safe Browsing***************************//
-                if (l.getReachable() && l.getSafe()) {
-                    return createSuccessfulRedirectToResponse(l);
-                } else {
-                    return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
-                }
-            } else {
-                return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
-            }  
-        } else {
+
+        if (l == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
+        //********************* Limitar redirecciones ***************************//
+        if (!limitRedirectionService.limitReached(l.getHash())) {
+            clickService.saveClick(id, extractIP(request), os, brw);
+            //********************* Alcanzabilidad y Google Safe Browsing***************************//
+            if (l.getReachable() && l.getSafe()) {
+                return createSuccessfulRedirectToResponse(l);
+            }
+            return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
+        }
+        return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @RequestMapping(value = "/link", method = RequestMethod.POST)
@@ -158,6 +169,37 @@ public class UrlShortenerController {
         CSVService.writeCSV(newPath, newRecord);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
+
+    //******************************************************************************//
+    //                                                                              //
+    //                            INFORMATION METHODS                               //
+    //                                                                              //
+    //******************************************************************************//
+
+    /*@RequestMapping(value = "/info", method = RequestMethod.GET)
+    @SendTo("/topic/info")
+    public ResponseEntity<?> info() {
+        try {
+            HttpHeaders h = new HttpHeaders();
+            Integer rand = new Integer(new Double(Math.random()).intValue());
+            String brw = new String();
+            String os = new String();
+            String resp = new String();
+            if (rand % 2 == 0) {
+                brw = shortUrlService.browserMostUsed();
+                os = shortUrlService.osMostUsed();
+                resp = "Most used: " + brw + "|" + os;
+                return new ResponseEntity<>(resp, h, HttpStatus.OK);
+            } else {
+                brw = shortUrlService.lastBrowser();
+                os = shortUrlService.lastOs();
+                resp = "Last used: " + brw + "|" + os;
+                return new ResponseEntity<>(resp, h, HttpStatus.OK);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }*/
 
     //******************************************************************************//
     //                                                                              //
