@@ -67,11 +67,11 @@ public class SystemTests {
 
     @Test
     public void testRedirection() throws Exception {
-        postLink("http://example.com/");
+        postLink("http://google.com/");
 
         ResponseEntity<String> entity = restTemplate.getForEntity("/f684a3c4", String.class);
         assertThat(entity.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
-        assertThat(entity.getHeaders().getLocation(), is(new URI("http://example.com/")));
+        assertThat(entity.getHeaders().getLocation(), is(new URI("http://google.com/")));
     }
 
     private ResponseEntity<String> postLink(String url) {

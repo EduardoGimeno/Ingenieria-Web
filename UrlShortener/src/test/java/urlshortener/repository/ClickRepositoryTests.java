@@ -89,9 +89,11 @@ public class ClickRepositoryTests {
         Long time = currentDate.getTime();
         time = time - 600000;
         Date limit = new Date(time);
-        repository.save(ClickFixture.click(ShortURLFixture.url1()));
-        repository.save(ClickFixture.click(ShortURLFixture.url1()));
         Long redirects = repository.countRedirects(ClickFixture.click(ShortURLFixture.url1()), limit);
+        assertEquals(redirects.longValue(), 0);
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        redirects = repository.countRedirects(ClickFixture.click(ShortURLFixture.url1()), limit);
         assertEquals(redirects.longValue(), 2);
     }
 
