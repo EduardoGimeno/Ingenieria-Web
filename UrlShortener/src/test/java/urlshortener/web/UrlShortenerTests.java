@@ -32,6 +32,7 @@ import urlshortener.service.HTTPInfo;
 import urlshortener.service.LimitRedirectionService;
 import urlshortener.service.ShortURLService;
 import urlshortener.service.URLReachableService;
+import urlshortener.service.SafeBrowsingService;
 
 public class UrlShortenerTests {
 
@@ -48,6 +49,9 @@ public class UrlShortenerTests {
 
     @Mock
     private URLReachableService urlReachableService;
+	
+	@Mock
+    private SafeBrowsingService safeBrowsingService;
 
     @Mock
     private LimitRedirectionService LimitRedirectionService;

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 @RestController
 public class UrlShortenerController {
@@ -31,17 +32,20 @@ public class UrlShortenerController {
     private final HTTPInfo httpInfo;
 
     private final URLReachableService urlReachableService;
+	
+	private final SafeBrowsingService safeBrowsingService;
 
     private final LimitRedirectionService limitRedirectionService;
 
     public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
-                HTTPInfo httpInfo, URLReachableService urlReachableService,
-                LimitRedirectionService limitRedirectionService) {
+                HTTPInfo httpInfo, URLReachableService urlReachableService, SafeBrowsingService safeBrowsingService,
+				LimitRedirectionService limitRedirectionService) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
         //************************************************************************//
         this.httpInfo = httpInfo;
         this.urlReachableService = urlReachableService;
+		this.safeBrowsingService = safeBrowsingService;
         this.limitRedirectionService = limitRedirectionService;
     }
 
@@ -68,8 +72,8 @@ public class UrlShortenerController {
             //********************* Limitar redirecciones ***************************//
             if (!limitRedirectionService.limitReached(l.getHash())) {
                 clickService.saveClick(id, extractIP(request), os, brw);
-                //********************* Alcanzabilidad ***************************//
-                if (l.getReachable()) {
+                //********************* Alcanzabilidad y Google Safe Browsing***************************//
+                if (l.getReachable() && l.getSafe()) {
                     return createSuccessfulRedirectToResponse(l);
                 } else {
                     return new ResponseEntity<>(HttpStatus.BAD_GATEWAY);
@@ -92,6 +96,8 @@ public class UrlShortenerController {
             //********************* Alcanzabilidad ***************************//
             String hash = su.getHash();
             urlReachableService.isReachableAsynchronous(url, hash);
+			//********************* Google Safe Browsing ***************************//
+			safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()));
             HttpHeaders h = new HttpHeaders();
             h.setLocation(su.getUri());
             return new ResponseEntity<>(su, h, HttpStatus.CREATED);
@@ -166,7 +172,7 @@ public class UrlShortenerController {
             List<ShortURL> list = shortUrlService.listURLs();
             List<String> resp = new ArrayList<>();
             for(ShortURL url: list) {
-                resp.add(url.getTarget() + ":" + url.getSafe() + ":" + url.getReachable());
+                resp.add(url.getTarget() + ":" + url.getSafe() + ":" + url.getReachable() + ":" + url.getHash());
             }
             return new ResponseEntity<>(resp.toString(), h, HttpStatus.OK);
         } catch (Exception e) {

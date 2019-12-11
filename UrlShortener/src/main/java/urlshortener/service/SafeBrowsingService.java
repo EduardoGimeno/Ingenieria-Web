@@ -6,6 +6,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.safebrowsing.Safebrowsing;
 import com.google.api.services.safebrowsing.model.*;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ShortURLRepository;
@@ -137,4 +138,14 @@ public class SafeBrowsingService {
 			}
 		}
     }
+	
+	@Async
+	public void asyncCheck(List<String> URLs){
+		try{
+			checkURLs(URLs);
+		}
+		catch (Exception e) {
+				log.error(e.toString());
+		}
+	}
 }
