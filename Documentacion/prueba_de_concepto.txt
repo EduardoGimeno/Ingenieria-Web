@@ -1,0 +1,22 @@
+Reunión prueba de concepto
+- Cabeceras HTTP
+	- Prueba de integración -> uso de mock mvc para request, mockito para la bd (verify)
+	- Uso de Spring MVC exception
+	** Limpieza de código **
+	** Escalabilidad -> más rápido **
+- Safe browsing
+	- SafeBrowsing es un componente, facilita el uso de claves
+	** Limpieza de código **
+	** Escalabilidad -> asíncrono **
+- CSV
+	- CSVController es un servicio
+	- No utilizar ficheros locales
+	- CSV = lista de
+	** Escalabilidad -> asíncrono **
+- Limitar redirecciones
+	- Uso de librería externa que cuente las redirecciones (Bucket4j)
+	- En redirectTo
+Comprobar URL alcanzable
+	- Puede ser que se complemente en otra
+- General
+	- En vez de utilizar utils mejor que esté en services
