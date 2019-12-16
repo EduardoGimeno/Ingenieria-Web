@@ -176,30 +176,51 @@ public class UrlShortenerController {
     //                                                                              //
     //******************************************************************************//
 
-    /*@RequestMapping(value = "/info", method = RequestMethod.GET)
+    @RequestMapping(value = "/info", method = RequestMethod.GET)
     @SendTo("/topic/info")
-    public ResponseEntity<?> info() {
+    public ResponseEntity<?> info(@RequestParam("opt") String opt) {
         try {
             HttpHeaders h = new HttpHeaders();
-            Integer rand = new Integer(new Double(Math.random()).intValue());
             String brw = new String();
             String os = new String();
             String resp = new String();
-            if (rand % 2 == 0) {
-                brw = shortUrlService.browserMostUsed();
-                os = shortUrlService.osMostUsed();
-                resp = "Most used: " + brw + "|" + os;
+            if (Integer.parseInt(opt) % 2 == 0) {
+                brw = clickService.browserMostUsed();
+                if (brw != null) {
+                    resp = "Most used: " + brw + " | ";
+                } else {
+                    resp = "Most used: none | ";
+                }
+
+                os = clickService.osMostUsed();
+                if (os != null) {
+                    resp = resp + os; 
+                } else {
+                    resp = resp + "none";
+                }
+
                 return new ResponseEntity<>(resp, h, HttpStatus.OK);
             } else {
-                brw = shortUrlService.lastBrowser();
-                os = shortUrlService.lastOs();
-                resp = "Last used: " + brw + "|" + os;
+                brw = clickService.browserLastUsed();
+                if (brw != null) {
+                    resp = "Last used: " + brw + " | ";
+                } else {
+                    resp = "Last used: none | ";
+                }
+
+                os = clickService.osLastUsed();
+                if (os != null) {
+                    resp = resp + os; 
+                } else {
+                    resp = resp + "none";
+                }
+                
                 return new ResponseEntity<>(resp, h, HttpStatus.OK);
             }
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }*/
+    }
 
     //******************************************************************************//
     //                                                                              //

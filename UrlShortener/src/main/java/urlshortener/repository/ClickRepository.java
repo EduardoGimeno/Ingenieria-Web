@@ -26,4 +26,14 @@ public interface ClickRepository {
     //*************** Limitar redirecciones *****************//
 
     Long countRedirects(Click cl, Date limit);
+
+    //*************** Extracción información *****************//
+
+    String getBrowserMostUsed();
+
+    String getOsMostUsed();
+ 
+    String getBrowserLastUsed();
+ 
+    String getOsLastUsed();
 }

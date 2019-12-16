@@ -35,4 +35,23 @@ public class ClickService {
                 .build();
         return clickRepository.countRedirects(cl, limit);
     }
+
+    //*************** Extracción información *****************//
+
+    public String browserMostUsed() {
+        return clickRepository.getBrowserMostUsed();
+    }
+
+    public String osMostUsed() {
+        return clickRepository.getOsMostUsed();
+    }
+
+    public String browserLastUsed() {
+        return clickRepository.getBrowserMostUsed();
+    }
+
+    public String osLastUsed() {
+        return clickRepository.getOsLastUsed();
+    }
+	
 }

@@ -107,6 +107,32 @@ public class ClickRepositoryTests {
         assertEquals(redirects.longValue(), 0);
     }
 
+    //*************** Extracción información *****************//
+
+    @Test
+    public void thatBrowserMostUsedIsReturned() {
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        assertEquals("Firefox", repository.getBrowserMostUsed());
+    }
+
+    @Test
+    public void thatPlatformMostUsedIsReturned() {
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        assertEquals("Debian", repository.getOsMostUsed());
+    }
+
+    @Test
+    public void thatBrowserLastUsedIsReturned() {
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        assertEquals("Firefox", repository.getBrowserLastUsed());
+    }
+
+    @Test
+    public void thatPlatformLastUsedIsReturned() {
+        repository.save(ClickFixture.click(ShortURLFixture.url1()));
+        assertEquals("Debian", repository.getOsLastUsed());
+    }
+
     @After
     public void shutdown() {
         db.shutdown();

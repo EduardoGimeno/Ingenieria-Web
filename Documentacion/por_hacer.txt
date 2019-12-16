@@ -1,6 +1,6 @@
 ========== Información cabeceras ===========
 Escalabilidad -> Enviar petición a un servicio externo que vaya extrayendo y guardando la información
-Método en el controlador para enviar información al cliente mediante websockets
+Test de integración método envío de información cabeceras
 
 ========== Google Safe Browsing ===========
 Escalabilidad -> Utilizar aspectos de programación funcional en Java, usar resilliance4j
