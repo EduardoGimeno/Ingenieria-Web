@@ -163,4 +163,50 @@ public class ClickRepositoryImpl implements ClickRepository {
         }
         return -1L;
     }
+
+    //*************** Extracción información *****************//
+
+    @Override
+    public String getBrowserMostUsed() {
+        try {
+            return jdbc.queryForObject("select browser from click group by browser order by count(*) desc limit 1",
+                    String.class);
+        } catch (Exception e) {
+            log.debug("When select most used brw", e);
+            return null;
+        }
+    }
+
+    @Override
+    public String getOsMostUsed() {
+        try {
+            return jdbc.queryForObject("select platform from click group by platform order by count(*) desc limit 1",
+                    String.class);
+        } catch (Exception e) {
+            log.debug("When select most used platform", e);
+            return null;
+        }
+    }
+
+    @Override
+    public String getBrowserLastUsed() {
+        try {
+            return jdbc.queryForObject("select browser from click order by created asc limit 1",
+                    String.class);
+        } catch (Exception e) {
+            log.debug("When select last used brw", e);
+            return null;
+        }
+    }
+
+    @Override
+    public String getOsLastUsed() {
+        try {
+            return jdbc.queryForObject("select platform from click order by created asc limit 1",
+                    String.class);
+        } catch (Exception e) {
+            log.debug("When select last used platform", e);
+            return null;
+        }
+    }
 }

@@ -65,7 +65,7 @@ public class ShortURLService {
                 .build();
         shortURLRepository.updateReachable(su);
     }
-	
+
 	public List<ShortURL> listURLs() {
         return shortURLRepository.list(20L, 0L);
     }

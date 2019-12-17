@@ -5,6 +5,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.safebrowsing.Safebrowsing;
 import com.google.api.services.safebrowsing.model.*;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -138,14 +139,68 @@ public class SafeBrowsingService {
 			}
 		}
     }
+
+    public List<String> checkURLs(List<String> URLs, SimpMessagingTemplate template, String destination) throws IOException, GeneralSecurityException {
+        // Crear la peticion con los datos de cliente y threats
+        final FindThreatMatchesRequest request = new FindThreatMatchesRequest();
+        final ClientInfo clientInfo = new ClientInfo();
+        clientInfo.setClientId(client_Name);
+        clientInfo.setClientVersion(client_Version);
+        request.setClient(clientInfo);
+        ThreatInfo threatInfo = createCompleteThreatInfo(URLs);
+        request.setThreatInfo(threatInfo);
+
+        final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        final JacksonFactory GOOGLE_JSON_FACTORY = JacksonFactory.getDefaultInstance();
+
+        Safebrowsing.Builder safebrowsingBuilder = new Safebrowsing.Builder(httpTransport, GOOGLE_JSON_FACTORY, null);
+        safebrowsingBuilder.setApplicationName(client_Name);
+        Safebrowsing safebrowsing = safebrowsingBuilder.build();
+        // Enviar peticion y obtener respuesta
+        FindThreatMatchesResponse findThreatMatchesResponse = safebrowsing.threatMatches().find(request).setKey(api_key).execute();
+        //Obtener y mostrar la lista de coincidencias (urls maliciosas)
+        List<ThreatMatch> threatMatches = findThreatMatchesResponse.getMatches();
+        List<String> maliciousURLs = new ArrayList<>();
+        if (threatMatches != null && threatMatches.size() > 0) {
+            // Marcar como no seguras y eliminar de la lista de seguras
+            for (ThreatMatch threatMatch : threatMatches) {
+                maliciousURLs.add(threatMatch.getThreat().getUrl());
+                List<ShortURL> ShortURLs = shortURLRepository.findByTarget(threatMatch.getThreat().getUrl());
+                for (ShortURL shorturl : ShortURLs) {
+                    shortURLRepository.mark(shorturl, false);
+                    template.convertAndSend(destination, "safeness:"+false);
+                }
+                URLs.remove(threatMatch.getThreat().getUrl());
+            }
+        }
+        // Marcar como seguras
+        for (String url : URLs) {
+            List<ShortURL> ShortURLs = shortURLRepository.findByTarget(url);
+            for (ShortURL shorturl : ShortURLs) {
+                shortURLRepository.mark(shorturl, true);
+                template.convertAndSend(destination, "safeness:"+true);
+            }
+        }
+        return maliciousURLs;
+    }
 	
 	@Async
-	public void asyncCheck(List<String> URLs){
+	public void asyncCheck(List<String> URLs, SimpMessagingTemplate template, String destination){
 		try{
-			checkURLs(URLs);
+			checkURLs(URLs, template, destination);
 		}
 		catch (Exception e) {
 				log.error(e.toString());
 		}
 	}
+
+    @Async
+    public void asyncCheck(List<String> URLs){
+        try{
+            checkURLs(URLs);
+        }
+        catch (Exception e) {
+            log.error(e.toString());
+        }
+    }
 }
