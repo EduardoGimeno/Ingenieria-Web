@@ -4,13 +4,16 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import urlshortener.service.ShortURLService;
 import urlshortener.service.URLReachableService;
 import urlshortener.domain.ShortURL;
+import urlshortener.domain.ClickInfo;
 import urlshortener.service.CSVService;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
@@ -23,6 +26,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
+
+
 
 @RestController
 public class UrlShortenerController {
@@ -42,9 +47,11 @@ public class UrlShortenerController {
 
     private final Long limitRedirects = new Long(5);
 
+    private SimpMessagingTemplate template;
+
     public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
                 HTTPInfo httpInfo, URLReachableService urlReachableService, SafeBrowsingService safeBrowsingService,
-				LimitRedirectionService limitRedirectionService) {
+				LimitRedirectionService limitRedirectionService, SimpMessagingTemplate template) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
         //************************************************************************//
@@ -54,6 +61,7 @@ public class UrlShortenerController {
         this.limitRedirectionService = limitRedirectionService;
         this.limitRedirectionService.setLimitTime(limitTime);
         this.limitRedirectionService.setMaxRedirects(limitRedirects);
+        this.template = template;
     }
 
     public Long getLimitRedirects() {
@@ -108,9 +116,17 @@ public class UrlShortenerController {
             String hash = su.getHash();
             urlReachableService.isReachableAsynchronous(url, hash);
 			//********************* Google Safe Browsing ***************************//
-			safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()));
+			//safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()), template, "/topic/test");
+            safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()));
             HttpHeaders h = new HttpHeaders();
             h.setLocation(su.getUri());
+            /* TODO: Enviar mensaje
+            String browserMostUsed = clickService.browserMostUsed();
+            String osMostUsed = clickService.osMostUsed();
+            String browserLastUsed = clickService.browserLastUsed();
+            String osLastUsed = clickService.osLastUsed();
+            template.convertAndSend("/app/topic/info", new ClickInfo(osMostUsed, browserMostUsed, browserLastUsed, osLastUsed));
+            */
             return new ResponseEntity<>(su, h, HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -176,49 +192,22 @@ public class UrlShortenerController {
     //                                                                              //
     //******************************************************************************//
 
-    @RequestMapping(value = "/info", method = RequestMethod.GET)
+    //@RequestMapping(value = "/info", method = RequestMethod.GET)
+    @MessageMapping("/info")
     @SendTo("/topic/info")
-    public ResponseEntity<?> info(@RequestParam("opt") String opt) {
+    public ClickInfo info(String opt) {
+        String browserMostUsed = new String();
+        String osMostUsed = new String();
+        String browserLastUsed = new String();
+        String osLastUsed = new String();
         try {
-            HttpHeaders h = new HttpHeaders();
-            String brw = new String();
-            String os = new String();
-            String resp = new String();
-            if (Integer.parseInt(opt) % 2 == 0) {
-                brw = clickService.browserMostUsed();
-                if (brw != null) {
-                    resp = "Most used: " + brw + " | ";
-                } else {
-                    resp = "Most used: none | ";
-                }
-
-                os = clickService.osMostUsed();
-                if (os != null) {
-                    resp = resp + os; 
-                } else {
-                    resp = resp + "none";
-                }
-
-                return new ResponseEntity<>(resp, h, HttpStatus.OK);
-            } else {
-                brw = clickService.browserLastUsed();
-                if (brw != null) {
-                    resp = "Last used: " + brw + " | ";
-                } else {
-                    resp = "Last used: none | ";
-                }
-
-                os = clickService.osLastUsed();
-                if (os != null) {
-                    resp = resp + os; 
-                } else {
-                    resp = resp + "none";
-                }
-                
-                return new ResponseEntity<>(resp, h, HttpStatus.OK);
-            }
+            browserMostUsed = clickService.browserMostUsed();
+            osMostUsed = clickService.osMostUsed();
+            browserLastUsed = clickService.browserLastUsed();
+            osLastUsed = clickService.osLastUsed();
+            return new ClickInfo(osMostUsed, browserMostUsed, browserLastUsed, osLastUsed);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ClickInfo(osMostUsed, browserMostUsed, browserLastUsed, osLastUsed);
         }
     }
 
