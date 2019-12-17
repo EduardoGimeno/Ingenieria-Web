@@ -21,4 +21,27 @@ $(document).ready(
                     }
                 });
             });
+        $("#shortenerCSV").submit(
+            function (event) {
+                event.preventDefault();
+                $.ajax({
+                    type: "POST",
+                    url: "/linkCSV",
+                    data: new FormData(this),
+                    contentType: false,
+                    processData: false,
+                    success: function (msg) {
+                        $("#resultCSV").html(
+                            "<div class='alert alert-success lead'><a target='_blank'"
+                            +"href=/linkCSV"
+                            + ">"
+                            + "Download"
+                            + "</a></div>");   
+                    },
+                    error: function () {
+                        $("#resultCSV").html(
+                            "<div class='alert alert-danger lead'>ERROR</div>");
+                    }
+                });
+        });        
     });
