@@ -50,7 +50,7 @@ public class URLReachableService {
      *  Proceso que comprueba cada 5 segundos la alcanzabilidad de las 10 URLs
      *  que hace más tiempo que no se comprueban
      */
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 6000)
     public void doReachableChecks() {
         List<ShortURL> list = shortURLRepository.getURLsToCheckReachability();
         List<String> urls = new ArrayList<>();

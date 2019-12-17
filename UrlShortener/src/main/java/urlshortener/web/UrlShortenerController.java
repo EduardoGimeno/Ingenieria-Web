@@ -184,7 +184,7 @@ public class UrlShortenerController {
             String brw = new String();
             String os = new String();
             String resp = new String();
-            if (Integer.parseInt(opt) % 2 == 0) {
+            if (Boolean.parseBoolean(opt)) {
                 brw = clickService.browserMostUsed();
                 if (brw != null) {
                     resp = "Most used: " + brw + " | ";
