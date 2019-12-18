@@ -13,7 +13,7 @@ public class HTTPInfoTests {
 
     @Before
     public void setUp() {
-        this.httpInfo = new HTTPInfo();
+        this.httpInfo = new HTTPInfo(null, null);
     }
 
     @Test

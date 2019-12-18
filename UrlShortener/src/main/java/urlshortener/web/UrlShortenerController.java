@@ -1,13 +1,9 @@
 package urlshortener.web;
 
 import org.apache.commons.validator.routines.UrlValidator;
-import org.apache.http.message.BufferedHeader;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 import urlshortener.service.ShortURLService;
 import urlshortener.service.URLReachableService;
 import urlshortener.domain.ShortURL;
-import urlshortener.domain.ClickInfo;
 import urlshortener.service.CSVService;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
@@ -24,18 +19,11 @@ import urlshortener.service.SafeBrowsingService;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.google.api.client.util.IOUtils;
-
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
@@ -46,26 +34,17 @@ import java.util.HashMap;
 @RestController
 public class UrlShortenerController {
     private final ShortURLService shortUrlService;
-
     private final ClickService clickService;
-
     private final HTTPInfo httpInfo;
-
     private final URLReachableService urlReachableService;
-
     private final SafeBrowsingService safeBrowsingService;
-
     private final LimitRedirectionService limitRedirectionService;
-
     private final Long limitTime = new Long(600000);
-
     private final Long limitRedirects = new Long(5);
-
-    private SimpMessagingTemplate template;
 
     public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
                 HTTPInfo httpInfo, URLReachableService urlReachableService, SafeBrowsingService safeBrowsingService,
-				LimitRedirectionService limitRedirectionService, SimpMessagingTemplate template) {
+				LimitRedirectionService limitRedirectionService) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
         // ************************************************************************//
@@ -75,24 +54,23 @@ public class UrlShortenerController {
         this.limitRedirectionService = limitRedirectionService;
         this.limitRedirectionService.setLimitTime(limitTime);
         this.limitRedirectionService.setMaxRedirects(limitRedirects);
-        this.template = template;
     }
 
     public Long getLimitRedirects() {
         return this.limitRedirects;
     }
 
-    // ******************************************************************************//
-    // //
-    // REQUEST HANDLER METHODS //
-    // //
-    // ******************************************************************************//
+    //******************************************************************************//
+    //                                                                              //
+    //                              REQUEST HANDLER METHODS                         //
+    //                                                                              //
+    //******************************************************************************//
 
-    // ******************************************************************************//
-    // //
-    // NORMAL METHODS //
-    // //
-    // ******************************************************************************//
+    //******************************************************************************//
+    //                                                                              //
+    //                                  NORMAL METHODS                              //
+    //                                                                              //
+    //******************************************************************************//
 
     @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
     public ResponseEntity<?> redirectTo(@PathVariable String id, HttpServletRequest request)
@@ -111,8 +89,7 @@ public class UrlShortenerController {
         // ********************* Limitar redirecciones ***************************//
         if (!limitRedirectionService.limitReached(l.getHash())) {
             clickService.saveClick(id, extractIP(request), os, brw);
-            // ********************* Alcanzabilidad y Google Safe
-            // Browsing***************************//
+            // ********************* Alcanzabilidad y Google Safe Browsing***************************//
             if (l.getReachable() && l.getSafe()) {
                 return createSuccessfulRedirectToResponse(l);
             }
@@ -132,28 +109,20 @@ public class UrlShortenerController {
             String hash = su.getHash();
             urlReachableService.isReachableAsynchronous(url, hash);
 			//********************* Google Safe Browsing ***************************//
-			//safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()), template, "/topic/test");
             safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()));
             HttpHeaders h = new HttpHeaders();
             h.setLocation(su.getUri());
-            /* TODO: Enviar mensaje
-            String browserMostUsed = clickService.browserMostUsed();
-            String osMostUsed = clickService.osMostUsed();
-            String browserLastUsed = clickService.browserLastUsed();
-            String osLastUsed = clickService.osLastUsed();
-            template.convertAndSend("/app/topic/info", new ClickInfo(osMostUsed, browserMostUsed, browserLastUsed, osLastUsed));
-            */
             return new ResponseEntity<>(su, h, HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
-    // ******************************************************************************//
-    // //
-    // CSV METHODS //
-    // //
-    // ******************************************************************************//
+    //******************************************************************************//
+    //                                                                              //
+    //                               CSV METHODS                                    //
+    //                                                                              //
+    //******************************************************************************//
 
     @RequestMapping(value = "/linkCSV", method = RequestMethod.POST)
     public ResponseEntity<String> shortenerCSV(@RequestParam("path") MultipartFile url,
@@ -226,31 +195,6 @@ public class UrlShortenerController {
         }
         CSVService.writeCSV(newPath, newRecord);*/
         //return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    //******************************************************************************//
-    //                                                                              //
-    //                            INFORMATION METHODS                               //
-    //                                                                              //
-    //******************************************************************************//
-
-    //@RequestMapping(value = "/info", method = RequestMethod.GET)
-    @MessageMapping("/info")
-    @SendTo("/topic/info")
-    public ClickInfo info(String opt) {
-        String browserMostUsed = new String();
-        String osMostUsed = new String();
-        String browserLastUsed = new String();
-        String osLastUsed = new String();
-        try {
-            browserMostUsed = clickService.browserMostUsed();
-            osMostUsed = clickService.osMostUsed();
-            browserLastUsed = clickService.browserLastUsed();
-            osLastUsed = clickService.osLastUsed();
-            return new ClickInfo(osMostUsed, browserMostUsed, browserLastUsed, osLastUsed);
-        } catch (Exception e) {
-            return new ClickInfo(osMostUsed, browserMostUsed, browserLastUsed, osLastUsed);
-        }
     }
 
     //******************************************************************************//

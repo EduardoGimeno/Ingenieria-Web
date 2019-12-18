@@ -191,7 +191,7 @@ public class ClickRepositoryImpl implements ClickRepository {
     @Override
     public String getBrowserLastUsed() {
         try {
-            return jdbc.queryForObject("select browser from click order by created asc limit 1",
+            return jdbc.queryForObject("select browser from click order by created desc limit 1",
                     String.class);
         } catch (Exception e) {
             log.debug("When select last used brw", e);
@@ -202,7 +202,7 @@ public class ClickRepositoryImpl implements ClickRepository {
     @Override
     public String getOsLastUsed() {
         try {
-            return jdbc.queryForObject("select platform from click order by created asc limit 1",
+            return jdbc.queryForObject("select platform from click order by created desc limit 1",
                     String.class);
         } catch (Exception e) {
             log.debug("When select last used platform", e);

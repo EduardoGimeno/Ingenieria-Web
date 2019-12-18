@@ -8,10 +8,14 @@
     <script src="webjars/jquery/2.1.4/jquery.min.js" type="text/javascript"></script>
     <script src="webjars/bootstrap/3.3.5/js/bootstrap.min.js"
             type="text/javascript"></script>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
     <script src="js/app.js" type="text/javascript">
     </script>
 </head>
-<body>
+<body onload="connect()">
 <div class="container-full">
     <div class="row">
         <div class="col-lg-12 text-center">
@@ -55,6 +59,27 @@
                 <div id="resultCSV"/>
             </div>
         </div>
+    </div>
+    <div class="row">
+            <table id="info" class="table table-striped" style="margin:auto;width:50% !important;">
+                <thead>
+				<tr>
+					<th></th>
+					<th>Operative System</th>
+					<th>Browser</th>
+				</tr>
+                <tr>
+					<th>Most Used</th>
+					<th id="osMostUsed"></th>
+					<th id="browserMostUsed"></th>
+                </tr>
+				<tr>
+					<th>Last used</th>
+					<th id="osLastUsed"></th>
+					<th id="browserLastUsed"></th>
+                </tr>
+                </thead>
+            </table>
     </div>
 </div>
 </body>

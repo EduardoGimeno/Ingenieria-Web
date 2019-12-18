@@ -1,9 +1,6 @@
 package urlshortener.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ShortURLRepository;
@@ -15,9 +12,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 import java.util.List;
 import java.util.function.*;
 import java.net.URI;
-import java.sql.Date;
 import java.io.IOException;
-import javax.servlet.http.HttpServletRequest;
 
 
 @Service

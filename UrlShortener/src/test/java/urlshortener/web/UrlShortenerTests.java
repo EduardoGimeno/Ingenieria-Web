@@ -31,7 +31,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import urlshortener.domain.ShortURL;
-import urlshortener.repository.ShortURLRepository;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
 import urlshortener.service.LimitRedirectionService;

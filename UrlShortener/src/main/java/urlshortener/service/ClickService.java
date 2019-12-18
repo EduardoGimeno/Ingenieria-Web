@@ -47,7 +47,7 @@ public class ClickService {
     }
 
     public String browserLastUsed() {
-        return clickRepository.getBrowserMostUsed();
+        return clickRepository.getBrowserLastUsed();
     }
 
     public String osLastUsed() {
