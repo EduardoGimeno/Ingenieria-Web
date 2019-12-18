@@ -156,45 +156,6 @@ public class UrlShortenerController {
         h.add(HttpHeaders.CONTENT_LENGTH,Integer.toString(result.length()));
         h.add(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=response.csv");
         return new ResponseEntity<>(result, h, HttpStatus.CREATED);
-        /*List<String[]> records= CSVService.readCSV(url);
-        int size= url.indexOf(".csv");
-        String newPath=url.substring(0, size)+"response.csv";
-        String[] record;
-        List<String[]> newRecord= new ArrayList<>();
-        for(String[] record: records){
-            if(urlValidator.isValid(record[0])){
-                ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
-                String[]newRecord={record[0],su.getHash()};
-                CSVController.writeCSV(newPath, newRecord);
-            }
-            else{
-                String[]newRecord={record[0],"ERROR"};
-                CSVController.writeCSV(newPath, newRecord);
-            }
-        }
-        if(records.isEmpty()){
-            String[] record={"ERROR"};
-                CSVController.writeCSV(newPath,record);
-        }
-        for(int i=0; i< records.size();i++){
-            record= records.get(i);
-            if(urlValidator.isValid(record[0]) && shortUrlService.findByKey(record[0])== null){
-                ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
-                String[] args={record[0],su.getHash()};
-                newRecord.add(args);
-            }
-            else if(shortUrlService.findByKey(record[0])!= null){
-                ShortURL req= shortUrlService.findByKey(record[0]);
-                String[] args={record[0],req.getHash()};
-                newRecord.add(args);
-            }
-            else{
-                String[] args={record[0],"ERROR"};
-                newRecord.add(args);
-            }
-        }
-        CSVService.writeCSV(newPath, newRecord);*/
-        //return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     //******************************************************************************//

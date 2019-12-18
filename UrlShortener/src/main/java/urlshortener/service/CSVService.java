@@ -19,12 +19,9 @@ public class CSVService {
         return urls.split("\n");
     }
     public static String write(OutputStreamWriter w, HashMap<String,String> h) throws IOException{
-        ResultSetColumnNameHelperService s= new ResultSetColumnNameHelperService();
         StringWriter str = new StringWriter();
         CSVWriter csv=new CSVWriter(str);
         String[] names={"Long URL","Is correct?", "Shorted URL"};
-        //s.setColumnNames(names, names);
-        //String[] lines = {s.toString()};
         csv.writeNext(names);
         for (String key: h.keySet() ){
             String value= h.get(key);
