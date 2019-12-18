@@ -31,12 +31,21 @@ $(document).ready(
                     contentType: false,
                     processData: false,
                     success: function (msg) {
+                        var blob = new  Blob([msg])
+                        var link = document.createElement("a")
+                        link.href = window.URL.createObjectURL(blob)
+                        link.download = "response.csv"
+                        document.body.appendChild(link)
                         $("#resultCSV").html(
-                            "<div class='alert alert-success lead'><a target='_blank'"
-                            +"href=/linkCSV"
-                            + ">"
+                            "<div class='alert alert-success lead'><a target='_blank' >"
                             + "Download"
-                            + "</a></div>");   
+                            + "</a></div>");
+                        document.getElementById('resultCSV').onclick = function(){
+                            link.click()
+                            //document.body.removeChild(link)
+                        }   
+                        //link.click()
+                        //document.body.removeChild(link)
                     },
                     error: function () {
                         $("#resultCSV").html(
