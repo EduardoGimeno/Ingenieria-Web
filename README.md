@@ -4,6 +4,11 @@
 Usar implementation en lugar de compile.
 ./gradlew dependencies permite ver si todo se ha importado correctamente.
 
+Heroku
+Usuario: b58e41dd1bceb2
+Contraseña: 0b0b036af6c696b
+Host: eu-cdbr-west-02.cleardb.net
+
 ## HTTP header information extraction
 Recurso externo utilizado: [Maven](https://mvnrepository.com/artifact/com.github.ua-parser/uap-java/1.4.3), [Github](https://github.com/ua-parser/uap-java)
 
