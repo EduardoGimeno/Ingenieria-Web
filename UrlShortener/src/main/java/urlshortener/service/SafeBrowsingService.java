@@ -23,7 +23,6 @@ import java.util.*;
 public class SafeBrowsingService {
     // Api Key obtenible desde: https://console.cloud.google.com/apis/credentials
     // Se debe activar el API de Google Safe Browsing: https://console.cloud.google.com/apis/api/safebrowsing.googleapis.com/
-    // TODO: ¿Usar key comun cifrada como en practica 2?
     private static final String api_key = "AIzaSyDhWGqSKhAFV2-q0Jmm9EL65s2qQE3EkrQ";
     private static final String client_Name = "iwebtp6";
     private static final String client_Version = "0.1";
@@ -56,7 +55,6 @@ public class SafeBrowsingService {
 
 
     // Crea ThreatInfo con todas las posibles combinaciones existentes de ThreatType, PlatformType=ANY_PLATFORM y threatEntryType=URL
-    // TODO: ¿Nos interesa threatEntryType=IP_RANGE, PlatformType=IOS|ANDROID?
     private ThreatInfo createCompleteThreatInfo(List<String> URLs) {
         ThreatInfo threatInfo = new ThreatInfo();
         // Tipo de threat que buscamos
@@ -80,8 +78,8 @@ public class SafeBrowsingService {
      * Funcion principal del modulo, dada una lista de URLs devuelve las que no son seguras
      * Ver: https://developers.google.com/safe-browsing/v4/lookup-api
      */
-    // TODO: ¿Cambiar comportamiento para que devuelva lista de seguras por ejemplo?
-    public List<String> checkURLs(List<String> URLs) throws IOException, GeneralSecurityException {
+    public Set<String> checkURLs(List<String> URLs) throws IOException, GeneralSecurityException {
+        List<String> safeURLs = new ArrayList<String>(URLs);
         // Crear la peticion con los datos de cliente y threats
         final FindThreatMatchesRequest request = new FindThreatMatchesRequest();
         final ClientInfo clientInfo = new ClientInfo();
@@ -101,7 +99,8 @@ public class SafeBrowsingService {
         FindThreatMatchesResponse findThreatMatchesResponse = safebrowsing.threatMatches().find(request).setKey(api_key).execute();
         //Obtener y mostrar la lista de coincidencias (urls maliciosas)
         List<ThreatMatch> threatMatches = findThreatMatchesResponse.getMatches();
-        List<String> maliciousURLs = new ArrayList<>();
+        System.out.println(findThreatMatchesResponse.toPrettyString());
+        Set<String> maliciousURLs = new HashSet<String>();
         if (threatMatches != null && threatMatches.size() > 0) {
             // Marcar como no seguras y eliminar de la lista de seguras
             for (ThreatMatch threatMatch : threatMatches) {
@@ -110,11 +109,11 @@ public class SafeBrowsingService {
                 for (ShortURL shorturl : ShortURLs) {
                     shortURLRepository.mark(shorturl, false);
                 }
-                URLs.remove(threatMatch.getThreat().getUrl());
+                safeURLs.remove(threatMatch.getThreat().getUrl());
             }
         }
         // Marcar como seguras
-        for (String url : URLs) {
+        for (String url : safeURLs) {
             List<ShortURL> ShortURLs = shortURLRepository.findByTarget(url);
             for (ShortURL shorturl : ShortURLs) {
                 shortURLRepository.mark(shorturl, true);
@@ -127,20 +126,19 @@ public class SafeBrowsingService {
     public void doSafeChecks() {
         List<ShortURL> list = shortURLRepository.getURLsToCheck();
         List<String> urls = new ArrayList<>();
-        for(ShortURL url: list) {
+        for (ShortURL url : list) {
             urls.add(url.getTarget());
         }
-		if(!urls.isEmpty()){
-			try {
-				checkURLs(urls);
-			}
-			catch (Exception e) {
-				log.error(e.toString());
-			}
-		}
+        if (!urls.isEmpty()) {
+            try {
+                checkURLs(urls);
+            } catch (Exception e) {
+                log.error(e.toString());
+            }
+        }
     }
 
-    public List<String> checkURLs(List<String> URLs, SimpMessagingTemplate template, String destination) throws IOException, GeneralSecurityException {
+    public Set<String> checkURLs(List<String> URLs, SimpMessagingTemplate template, String destination) throws IOException, GeneralSecurityException {
         // Crear la peticion con los datos de cliente y threats
         final FindThreatMatchesRequest request = new FindThreatMatchesRequest();
         final ClientInfo clientInfo = new ClientInfo();
@@ -160,7 +158,7 @@ public class SafeBrowsingService {
         FindThreatMatchesResponse findThreatMatchesResponse = safebrowsing.threatMatches().find(request).setKey(api_key).execute();
         //Obtener y mostrar la lista de coincidencias (urls maliciosas)
         List<ThreatMatch> threatMatches = findThreatMatchesResponse.getMatches();
-        List<String> maliciousURLs = new ArrayList<>();
+        Set<String> maliciousURLs = new HashSet<String>();
         if (threatMatches != null && threatMatches.size() > 0) {
             // Marcar como no seguras y eliminar de la lista de seguras
             for (ThreatMatch threatMatch : threatMatches) {
@@ -168,7 +166,7 @@ public class SafeBrowsingService {
                 List<ShortURL> ShortURLs = shortURLRepository.findByTarget(threatMatch.getThreat().getUrl());
                 for (ShortURL shorturl : ShortURLs) {
                     shortURLRepository.mark(shorturl, false);
-                    template.convertAndSend(destination, "safeness:"+false);
+                    template.convertAndSend(destination, "safeness:" + false);
                 }
                 URLs.remove(threatMatch.getThreat().getUrl());
             }
@@ -178,28 +176,26 @@ public class SafeBrowsingService {
             List<ShortURL> ShortURLs = shortURLRepository.findByTarget(url);
             for (ShortURL shorturl : ShortURLs) {
                 shortURLRepository.mark(shorturl, true);
-                template.convertAndSend(destination, "safeness:"+true);
+                template.convertAndSend(destination, "safeness:" + true);
             }
         }
         return maliciousURLs;
     }
-	
-	@Async
-	public void asyncCheck(List<String> URLs, SimpMessagingTemplate template, String destination){
-		try{
-			checkURLs(URLs, template, destination);
-		}
-		catch (Exception e) {
-				log.error(e.toString());
-		}
-	}
 
     @Async
-    public void asyncCheck(List<String> URLs){
-        try{
-            checkURLs(URLs);
+    public void asyncCheck(List<String> URLs, SimpMessagingTemplate template, String destination) {
+        try {
+            checkURLs(URLs, template, destination);
+        } catch (Exception e) {
+            log.error(e.toString());
         }
-        catch (Exception e) {
+    }
+
+    @Async
+    public void asyncCheck(List<String> URLs) {
+        try {
+            checkURLs(URLs);
+        } catch (Exception e) {
             log.error(e.toString());
         }
     }

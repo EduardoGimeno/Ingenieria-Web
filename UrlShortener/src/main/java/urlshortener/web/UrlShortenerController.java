@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 
 
-
 @RestController
 public class UrlShortenerController {
     private final ShortURLService shortUrlService;
@@ -42,9 +41,9 @@ public class UrlShortenerController {
     private final Long limitTime = new Long(600000);
     private final Long limitRedirects = new Long(5);
 
-    public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, 
-                HTTPInfo httpInfo, URLReachableService urlReachableService, SafeBrowsingService safeBrowsingService,
-				LimitRedirectionService limitRedirectionService) {
+    public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService,
+                                  HTTPInfo httpInfo, URLReachableService urlReachableService, SafeBrowsingService safeBrowsingService,
+                                  LimitRedirectionService limitRedirectionService) {
         this.shortUrlService = shortUrlService;
         this.clickService = clickService;
         // ************************************************************************//
@@ -100,15 +99,15 @@ public class UrlShortenerController {
 
     @RequestMapping(value = "/link", method = RequestMethod.POST)
     public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
-            @RequestParam(value = "sponsor", required = false) String sponsor, HttpServletRequest request)
+                                              @RequestParam(value = "sponsor", required = false) String sponsor, HttpServletRequest request)
             throws IOException {
-        UrlValidator urlValidator = new UrlValidator(new String[] { "http", "https" });
+        UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
         if (urlValidator.isValid(url)) {
             ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
             // ********************* Alcanzabilidad ***************************//
             String hash = su.getHash();
             urlReachableService.isReachableAsynchronous(url, hash);
-			//********************* Google Safe Browsing ***************************//
+            //********************* Google Safe Browsing ***************************//
             safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()));
             HttpHeaders h = new HttpHeaders();
             h.setLocation(su.getUri());
@@ -126,14 +125,14 @@ public class UrlShortenerController {
 
     @RequestMapping(value = "/linkCSV", method = RequestMethod.POST)
     public ResponseEntity<String> shortenerCSV(@RequestParam("path") MultipartFile url,
-                                              @RequestParam(value = "sponsor", required = false) String sponsor,
-                                              HttpServletRequest request) throws IOException{
+                                               @RequestParam(value = "sponsor", required = false) String sponsor,
+                                               HttpServletRequest request) throws IOException {
         UrlValidator urlValidator = new UrlValidator(new String[]{"http",
                 "https"});
-        String[] url_list= CSVService.getURLs(url);
+        String[] url_list = CSVService.getURLs(url);
         System.out.println(url_list.length);
-        HashMap<String,String> shorted_urls= new HashMap<>();
-        for (String long_url: url_list){
+        HashMap<String, String> shorted_urls = new HashMap<>();
+        for (String long_url : url_list) {
             if (urlValidator.isValid(long_url)) {
                 ShortURL su = shortUrlService.save(long_url, sponsor, request.getRemoteAddr());
                 //********************* Alcanzabilidad ***************************//
@@ -142,19 +141,18 @@ public class UrlShortenerController {
                 //********************* Google Safe Browsing ***************************//
                 safeBrowsingService.asyncCheck(Collections.singletonList(su.getTarget()));
                 shorted_urls.put(long_url, su.getHash());
-            }
-            else{
+            } else {
                 shorted_urls.put(long_url, "ERROR");
             }
-        } 
+        }
         HttpHeaders h = new HttpHeaders();
-        OutputStream arg0= new ByteArrayOutputStream();
-        OutputStreamWriter w= new OutputStreamWriter(arg0);
-        String result=CSVService.write(w,shorted_urls);
+        OutputStream arg0 = new ByteArrayOutputStream();
+        OutputStreamWriter w = new OutputStreamWriter(arg0);
+        String result = CSVService.write(w, shorted_urls);
         System.out.println(result);
         h.add(HttpHeaders.CONTENT_TYPE, "text/csv");
-        h.add(HttpHeaders.CONTENT_LENGTH,Integer.toString(result.length()));
-        h.add(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=response.csv");
+        h.add(HttpHeaders.CONTENT_LENGTH, Integer.toString(result.length()));
+        h.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=response.csv");
         return new ResponseEntity<>(result, h, HttpStatus.CREATED);
     }
 
@@ -163,14 +161,14 @@ public class UrlShortenerController {
     //                                LIST METHODS                                  //
     //                                                                              //
     //******************************************************************************//
-    
-	@RequestMapping(value = "/list", method = RequestMethod.GET)
+
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
     public ResponseEntity<?> check(HttpServletRequest request) {
         try {
             HttpHeaders h = new HttpHeaders();
             List<ShortURL> list = shortUrlService.listURLs();
             List<String> resp = new ArrayList<>();
-            for(ShortURL url: list) {
+            for (ShortURL url : list) {
                 resp.add(url.getTarget() + ":" + url.getSafe() + ":" + url.getReachable() + ":" + url.getHash());
             }
             return new ResponseEntity<>(resp.toString(), h, HttpStatus.OK);
@@ -201,8 +199,8 @@ public class UrlShortenerController {
     //                                                                              //
     //******************************************************************************//
 
-    @ResponseStatus(value=HttpStatus.INTERNAL_SERVER_ERROR, 
-                reason="Error obtaining data of USER-AGENT header") 
+    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR,
+            reason = "Error obtaining data of USER-AGENT header")
     @ExceptionHandler(IOException.class)
     public void conflict() {
     }

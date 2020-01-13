@@ -5,29 +5,35 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.*;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import urlshortener.repository.ShortURLRepository;
+import urlshortener.repository.impl.ShortURLRepositoryImpl;
 
 // Prueba Google Safe Browsing
 public class SafeBrowsingTest {
-	
-	@Mock
-	private SafeBrowsingService safeBrowsingService;
-	
-	@Before
+
+    private SafeBrowsingService safeBrowsingService;
+
+    @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        EmbeddedDatabase db = new EmbeddedDatabaseBuilder().setType(HSQL)
+                .addScript("schema-hsqldb.sql").build();
+        JdbcTemplate jdbc = new JdbcTemplate(db);
+        ShortURLRepository repository = new ShortURLRepositoryImpl(jdbc);
+        safeBrowsingService = new SafeBrowsingService(repository);
     }
-	
+
     @Test
     public void thataSingleCorrectURLisOK() throws IOException, GeneralSecurityException {
-        String URL = "https://developers.google.com/safe-browsing/v4/lists";
-        List<String> result = safeBrowsingService.checkURLs(Collections.singletonList(URL));
+        String URL = "http://example.com/";
+        Set<String> result = safeBrowsingService.checkURLs(Collections.singletonList(URL));
         assertTrue(result.isEmpty());
     }
 
@@ -36,27 +42,25 @@ public class SafeBrowsingTest {
         List<String> URLs = new ArrayList<>();
         URLs.add("https://developers.google.com/safe-browsing/v4/lists");
         URLs.add("https://www.youtube.com/");
-        List<String> result = safeBrowsingService.checkURLs(URLs);
+        Set<String> result = safeBrowsingService.checkURLs(URLs);
         assertTrue(result.isEmpty());
     }
 
-    // TODO
     @Test
     public void thataSingleMaliciousURLisOK() throws IOException, GeneralSecurityException {
-        String URL = "?????";
-        //List<String> result = SafeBrowsing.checkURLs(Collections.singletonList(URL));
-        //assertEquals(1, result.size());
-        //assertEquals(URL, result.get(0));
+        String URL = "http://malware.testing.google.test/testing/malware/";
+        Set<String> result = safeBrowsingService.checkURLs(Collections.singletonList(URL));
+        assertEquals(1, result.size());
+        Iterator iter = result.iterator();
+        assertEquals(URL, iter.next());
     }
 
-    // TODO
     @Test
     public void thatMultipleMaliciousURLsisOK() throws IOException, GeneralSecurityException {
         List<String> URLs = new ArrayList<>();
-        URLs.add("?????");
-        URLs.add("?????");
-        //List<String> result = SafeBrowsing.checkURLs(URLs);
-        //assertEquals(2, result.size());
-        //...
+        URLs.add("https://the2pappsoftsubgroup.info/23po4ntogs/cba/index.php");
+        URLs.add("http://malware.testing.google.test/testing/malware/");
+        Set<String> result = safeBrowsingService.checkURLs(URLs);
+        assertEquals(2, result.size());
     }
 }

@@ -3,6 +3,7 @@ package urlshortener.web;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,7 @@ import static urlshortener.fixtures.ShortURLFixture.urlNotSafe;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -31,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import urlshortener.domain.ShortURL;
+import urlshortener.repository.ShortURLRepository;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
 import urlshortener.service.LimitRedirectionService;
@@ -53,12 +56,15 @@ public class UrlShortenerTests {
 
     @Mock
     private URLReachableService urlReachableService;
-	
+
     @Mock
     private SafeBrowsingService safeBrowsingService;
 
     @Mock
     private LimitRedirectionService LimitRedirectionService;
+
+    @Mock
+    private ShortURLRepository shortURLRepository;
 
     @InjectMocks
     private UrlShortenerController urlShortener;
@@ -77,10 +83,10 @@ public class UrlShortenerTests {
         when(httpInfo.getNav("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")).thenReturn("Firefox");
         when(httpInfo.getOS("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")).thenReturn("Windows");
 
-        mockMvc.perform(get("/{id}", "someKey").header(HttpHeaders.USER_AGENT, 
+        mockMvc.perform(get("/{id}", "someKey").header(HttpHeaders.USER_AGENT,
                 "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"))
                 .andDo(print());
-        
+
         verify(clickService).saveClick("someKey", "127.0.0.1", "Windows", "Firefox");
     }
 
@@ -120,8 +126,8 @@ public class UrlShortenerTests {
                         "sponsor", "http://sponsor.com/")).andDo(print())
                 .andExpect(redirectedUrl("http://localhost/f684a3c4"))
                 .andExpect(status().isCreated());
-
-        //verify(, timeout(5000));
+        verify(safeBrowsingService).asyncCheck(Collections.singletonList("http://example.com/"));
+        verify(shortURLRepository, timeout(10000)).mark(any(), eq(true));
     }
 
     @Test
@@ -139,11 +145,11 @@ public class UrlShortenerTests {
     public void thatRedirectToFailsIfLimitReached() throws Exception {
         when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
 
-        for (int i=0; i<urlShortener.getLimitRedirects(); ++i) {
+        for (int i = 0; i < urlShortener.getLimitRedirects(); ++i) {
             mockMvc.perform(get("/{id}", "someKey")).andDo(print())
-                  .andExpect(status().isTemporaryRedirect()); 
+                    .andExpect(status().isTemporaryRedirect());
         }
-  
+
         mockMvc.perform(get("/{id}", "someKey")).andDo(print())
                 .andExpect(status().isTooManyRequests());
     }
@@ -152,7 +158,7 @@ public class UrlShortenerTests {
     public void thatRedirectToReturnsTemporaryRedirectIfKeyExists()
             throws Exception {
         when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
-  
+
         mockMvc.perform(get("/{id}", "someKey")).andDo(print())
                 .andExpect(status().isTemporaryRedirect())
                 .andExpect(redirectedUrl("http://example.com/"));
@@ -213,7 +219,7 @@ public class UrlShortenerTests {
                 .andExpect(status().isBadRequest());
     }
 
-    private void configureSave(String sponsor) throws IOException{
+    private void configureSave(String sponsor) throws IOException {
         when(shortUrlService.save(any(), any(), any()))
                 .then((Answer<ShortURL>) invocation -> new ShortURL(
                         "f684a3c4",
