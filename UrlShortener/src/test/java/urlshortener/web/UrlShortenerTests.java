@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -40,6 +42,7 @@ import urlshortener.service.LimitRedirectionService;
 import urlshortener.service.ShortURLService;
 import urlshortener.service.URLReachableService;
 import urlshortener.service.SafeBrowsingService;
+import urlshortener.service.CSVService;
 
 public class UrlShortenerTests {
 
@@ -65,6 +68,9 @@ public class UrlShortenerTests {
 
     @Mock
     private ShortURLRepository shortURLRepository;
+
+    @Mock
+    private CSVService CSVService;
 
     @InjectMocks
     private UrlShortenerController urlShortener;
@@ -235,5 +241,17 @@ public class UrlShortenerTests {
                         null,
                         false,
                         null));
+    }
+        //********************* CSV Files ***************************//
+    @Test
+    public void thatCSVrequestiscorrect() throws Exception{
+        when(shortUrlService.findByKey("www.example.com")).thenReturn(someUrl());
+        String lines = "www.example.com";
+        byte[] bytes= lines.getBytes();
+        MockMultipartFile multipart= new MockMultipartFile("path", bytes);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.multipart("/linkCSV").file(multipart)).andDo(print())
+                .andExpect(status().isCreated());
     }
 }
