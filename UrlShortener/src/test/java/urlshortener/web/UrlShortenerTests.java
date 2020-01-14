@@ -35,6 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import urlshortener.domain.ShortURL;
+import urlshortener.fixtures.ShortURLFixture;
 import urlshortener.repository.ShortURLRepository;
 import urlshortener.service.ClickService;
 import urlshortener.service.HTTPInfo;
@@ -247,6 +248,28 @@ public class UrlShortenerTests {
     public void thatCSVrequestiscorrect() throws Exception{
         when(shortUrlService.findByKey("www.example.com")).thenReturn(someUrl());
         String lines = "www.example.com";
+        byte[] bytes= lines.getBytes();
+        MockMultipartFile multipart= new MockMultipartFile("path", bytes);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.multipart("/linkCSV").file(multipart)).andDo(print())
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    public void CSVEmptyRequestiscorrect() throws Exception{
+        String lines = "www.example.com";
+        byte[] bytes= lines.getBytes();
+        MockMultipartFile multipart= new MockMultipartFile("path", bytes);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.multipart("/linkCSV").file(multipart)).andDo(print())
+                .andExpect(status().isCreated());
+    }
+    @Test
+    public void CSVUnreachableURLiscorrect() throws Exception{
+        when(shortUrlService.findByKey("www.google.es")).thenReturn(urlshortener.fixtures.ShortURLFixture.url3());
+        String lines = "www.google.es";
         byte[] bytes= lines.getBytes();
         MockMultipartFile multipart= new MockMultipartFile("path", bytes);
 
