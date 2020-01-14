@@ -3,7 +3,7 @@
 ## Url shortener
 Trabajo de la asignatura de Ingeniería Web.
 
-Funcionalidades añadidas:
+### Funcionalidades añadidas
     - Limitar el número de redirecciones a una URL o dominio.
     - Comprobar la URL mediante Google Safe Browsing.
     - Comprobar la si la URL es alcanzable.
